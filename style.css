@@ -1,0 +1,60 @@
+/* Общие стили */
+body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Luminari', 'Fantasy', sans-serif; background-color: #333; }
+#start-screen { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; background: url('https://i.postimg.cc/3Rkk1S6Q/b219cb5f0eb82c4c39988678151c1c54-d268a249-fd6e-4693-ae94-1f59641e8769.jpg') no-repeat center center; background-size: cover; }
+#start-game-btn { padding: 20px 40px; font-size: 2em; font-family: inherit; color: white; background-color: #8B4513; border: 3px solid #f3dcb8; border-radius: 15px; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: transform 0.2s; }
+#start-game-btn:hover { transform: scale(1.05); }
+#game-container { position: relative; width: 100vw; height: 100vh; background: url('https://i.postimg.cc/3Rkk1S6Q/b219cb5f0eb82c4c39988678151c1c54-d268a249-fd6e-4693-ae94-1f59641e8769.jpg') no-repeat center center; background-size: cover; }
+
+@keyframes sway { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(4deg) scale(1); } 100% { transform: rotate(0deg) scale(1); } }
+.artifact { position: absolute; width: 60px; height: 60px; background: url('https://i.postimg.cc/TYktLZfk/treasure-chest.png') no-repeat center center; background-size: contain; cursor: pointer; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4)); animation: sway 2s ease-in-out infinite alternate; z-index: 10; transition: top 1s ease-in-out, left 1s ease-in-out, transform 1s ease-in-out; }
+.artifact:hover { transform: scale(1.25); filter: brightness(1.1) drop-shadow(0 8px 15px rgba(0,0,0,0.5)); animation-play-state: paused; }
+
+/* --- ИЗМЕНЕНИЕ: Счетчик отодвинут левее --- */
+#score-counter { position: absolute; top: 20px; right: 120px; /* Было 20px */ padding: 10px 20px; background-color: rgba(50, 30, 10, 0.7); color: #f3dcb8; font-size: 1.5em; border-radius: 10px; border: 2px solid #f3dcb8; z-index: 6; }
+
+/* --- ИЗМЕНЕНИЕ: Панель сундучков сделана шире для двух колонок --- */
+#collected-artifacts-panel {
+    position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+    width: 85px; /* Ширина для двух колонок */
+    height: 95vh; max-height: 800px; background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 15px; padding: 10px 5px; box-sizing: border-box; display: flex;
+    flex-wrap: wrap; /* Разрешаем перенос на новую строку/колонку */
+    align-content: flex-start; /* Начинаем заполнять сверху */
+    justify-content: center;
+    gap: 4px; z-index: 5;
+}
+/* --- ИЗМЕНЕНИЕ: Сундучки в панели стали меньше --- */
+.collected-artifact { width: 35px; height: 35px; background: url('https://i.postimg.cc/TYktLZfk/treasure-chest.png') no-repeat center center; background-size: contain; flex-shrink: 0; }
+
+/* --- ВОЗВРАЩАЕМ СТИЛИ ДЛЯ СЛЕДОВ --- */
+#footprints-container {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    padding: 10px; background-color: rgba(0, 0, 0, 0.4); border-radius: 10px;
+    max-width: 500px;
+}
+.footprint {
+    width: 35px; height: 35px;
+    background: url('https://i.postimg.cc/FsgV3wmt/Untitled-design2.png') no-repeat center center;
+    background-size: contain;
+    transition: all 1.5s cubic-bezier(0.42, 0, 0.58, 1);
+}
+.final-path-footprint {
+    width: 60px; height: 60px;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+}
+
+.hidden { display: none !important; }
+
+#final-target { position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); padding: 25px; background-color: gold; color: #4a2c0c; font-size: 1.2em; text-decoration: none; border-radius: 15px; border: 3px solid #fff; box-shadow: 0 0 20px 10px gold, 0 0 50px 20px rgba(255, 215, 0, 0.5); animation: pulse 2s infinite; z-index: 50; text-align: center; }
+
+/* Остальные стили без изменений */
+#modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+#modal { background-color: #f3dcb8; background-image: url('https://www.transparenttextures.com/patterns/old-paper.png'); padding: 30px; border-radius: 15px; border: 5px solid #8B4513; box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); text-align: center; width: 90%; max-width: 500px; }
+#question-text { font-size: 1.5em; color: #4a2c0c; margin-bottom: 20px; }
+#answers-container { display: flex; flex-direction: column; gap: 10px; }
+.answer-btn { padding: 15px; border: 2px solid #8B4513; background-color: #c5a072; color: #4a2c0c; font-size: 1.2em; font-family: inherit; border-radius: 10px; cursor: pointer; transition: background-color 0.2s; }
+.answer-btn:hover { background-color: #a5845c; }
+.shake { animation: shake 0.5s; }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); } 20%, 40%, 60%, 80% { transform: translateX(10px); } }
+@keyframes pulse { 0% { transform: translate(-50%, -50%) scale(0.95); } 70% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(0.95); } }
