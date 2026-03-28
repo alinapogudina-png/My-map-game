@@ -1,46 +1,105 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карта-квест</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<!-- ... остальной код ваш, ниже добавляем только новую часть для звука! -->
 
-    <div id="start-screen">
-        <button id="start-game-btn">Start the adventure!</button>
-    </div>
+<style>
+#sound-btn {
+    position:fixed;
+    z-index:9999;
+    right:2vw;
+    bottom:2vw;
+    width:40px;
+    height:40px;
+    background:rgba(255,255,255,0.78);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 3px 12px #0004;
+    cursor:pointer;
+    transition:.2s background;
+}
+#sound-btn:hover{background:rgba(220,220,255,0.99);}
+#sound-btn svg{width:28px;height:28px;}
+</style>
 
-    <div id="game-content" class="hidden">
-        <div id="game-container">
-            <div id="artifacts-container"></div>
-            
-            <!-- ВОЗВРАЩАЕМ КОНТЕЙНЕР ДЛЯ СЛЕДОВ -->
-            <div id="footprints-container"></div>
+<!-- КНОПКА ЗВУКА -->
+<div id="sound-btn" title="Отключить звук">
+  <!-- SVG будет меняться в JS: громко/тихо -->
+  <svg id="sound-on" style="display:block;" viewBox="0 0 24 24" fill="none"><path d="M3 10V14H7L12 19V5L7 10H3Z" fill="#0a355c"/></svg>
+  <svg id="sound-off" style="display:none;" viewBox="0 0 24 24" fill="none"><path d="M16.5 12C16.5 13.3807 15.8807 14.6307 14.8504 15.5156M17.6105 17.1684L6.83159 6.38948M4 19.25L19.25 4M12 4.75V19.25" stroke="#792d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
 
-            <div id="collected-artifacts-panel"></div>
-            <div id="score-counter">0 / 20</div>
+<script>
+// --- АУДИО СИСТЕМА ---
+let soundEnabled = true;
 
-            <a href="https://www.genial.ly" target="_blank" id="final-target" class="hidden">
-                Fantastic!<br>Here is our secret place!
-            </a>
-        </div>
+// ваши стандартные звуки, можно подключить что-то другое:
+const sfx_ok = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b9ea174.mp3");   // Correct
+const sfx_error = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b958799.mp3"); // Error
+const sfx_final = new Audio("https://cdn.pixabay.com/audio/2022/10/16/audio_12ab154962.mp3"); // Final
+const sfx_restart = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b9e2855.mp3"); // Restart
 
-        <div id="modal-overlay" class="hidden">
-            <div id="modal">
-                <p id="question-text"></p>
-                <div id="answers-container"></div>
-            </div>
-        </div>
-    </div>
+function play_ok(){ if(soundEnabled){ sfx_ok.pause(); sfx_ok.currentTime=0; sfx_ok.play(); } }
+function play_error(){ if(soundEnabled){ sfx_error.pause(); sfx_error.currentTime=0; sfx_error.play(); } }
+function play_final(){ if(soundEnabled){ sfx_final.pause(); sfx_final.currentTime=0; sfx_final.play(); } }
+function play_restart(){ if(soundEnabled){ sfx_restart.pause(); sfx_restart.currentTime=0; sfx_restart.play(); } }
 
-    <!-- Аудио для звуковых эффектов -->
-    <audio id="correct-sound" src="https://files.catbox.moe/6n1mv9.mp3" preload="auto"></audio>
-    <audio id="chest-open-sound" src="https://files.catbox.moe/6wo57y.mp3" preload="auto"></audio>
-    <audio id="final-target-sound" src="https://files.catbox.moe/4blw0b.mp3" preload="auto"></audio>
-    <audio id="wrong-answer-sound" src="https://files.catbox.moe/6e8vp7.mp3" preload="auto"></audio>
+// Клик по иконке mute/unmute:
+const soundBtn = document.getElementById('sound-btn');
+soundBtn.onclick = function(){
+    soundEnabled = !soundEnabled;
+    document.getElementById('sound-on').style.display = soundEnabled ? "block" : "none";
+    document.getElementById('sound-off').style.display = !soundEnabled ? "block" : "none";
+    soundBtn.title = soundEnabled ? "Отключить звук" : "Включить звук";
+};
+// Исправить стартовое состояние
+soundEnabled = true;
+document.getElementById('sound-on').style.display = "block";
+document.getElementById('sound-off').style.display = "none";
 
-    <script src="script.js"></script>
-</body>
-</html>
+// ----- ВСТАВЬТЕ ЗВУКОВЫЕ ВЫЗОВЫ В СООТВЕТСТВУЮЩИХ МЕСТАХ ИГРЫ -----
+
+// Пример интеграции:
+//  checkAnswer()  --> play_ok() или play_error()
+//  showFinal()    --> play_final()
+//  restart()      --> play_restart()
+
+// Например, если ваш checkAnswer примерно такой:
+function checkAnswer(){
+    let idx = currentArtifact.idx, art = currentArtifact.node;
+    let a = document.getElementById('answer').value.trim().toLowerCase();
+    if(a === dict[LANG].a[idx]){
+      play_ok();     // +++
+      document.getElementById('question-modal').style.display = 'none';
+      collectArtifact(art, idx);
+    } else {
+      play_error();  // +++
+      mistakes[idx]++;
+      animateShake(document.getElementById('question-box'));
+      animateShake(art);
+      if(mistakes[idx]===1){
+        document.getElementById('message').textContent = dict[LANG].wrong[0];
+        art.classList.add('temp-hide');
+        setTimeout(()=>{art.classList.remove('temp-hide');},10000);
+      }
+      else if(mistakes[idx]===2){
+        document.getElementById('message').textContent = dict[LANG].wrong[1];
+        art.classList.add('temp-hide');
+        setTimeout(()=>{art.classList.remove('temp-hide');},10000);
+      }
+      else if(mistakes[idx]>=3){
+        play_restart(); // +++
+        document.getElementById('message').textContent = dict[LANG].wrong[2];
+        setTimeout(()=>restart(),1400)
+      }
+    }
+  }
+
+// Пример когда финальная линия открывается:
+function showFinal(){
+    counter.textContent = dict[LANG].found + n + dict[LANG].of + n;
+    document.getElementById('final').style.display = '';
+    play_final(); // +++
+    // и далее по вашему коду...
+}
+
+</script>
