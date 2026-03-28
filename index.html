@@ -654,16 +654,19 @@ I ___ not tired.|am|is|are
                         cursor: pointer; 
                         transition: background-color 0.2s; 
                     }
-                    .answer-btn:hover { background-color: var(--answer-button-hover-color); } <!-- NEW HOVER COLOR -->
+                    
+                    /* ИСПРАВЛЕНА ОШИБКА ЗДЕСЬ: заменен HTML-комментарий на CSS-комментарий */
+                    .answer-btn:hover { background-color: var(--answer-button-hover-color); } /* NEW HOVER COLOR */
+                    
                     .shake { animation: shake 0.5s; }
                     @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); } 20%, 40%, 60%, 80% { transform: translateX(10px); } }
                     @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(0.95); } 70% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(0.95); } }
                     
-                    /* Стили для кнопки звука */
+                    /* Стили для кнопки звука (ТЕПЕРЬ БУДУТ РАБОТАТЬ) */
                     #mute-btn {
                         position: absolute;
                         bottom: 20px;
-                        right: 120px; /* Сдвинуто чуть левее панели артефактов */
+                        right: 120px; 
                         width: 50px;
                         height: 50px;
                         font-size: 24px;
@@ -680,6 +683,7 @@ I ___ not tired.|am|is|are
                         padding: 0;
                         line-height: 1;
                         box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+                        pointer-events: auto;
                     }
                     #mute-btn:hover {
                         transform: scale(1.1);
@@ -740,7 +744,7 @@ I ___ not tired.|am|is|are
                     document.documentElement.style.setProperty('--question-modal-bg-color', GameConfig.questionModalBgColor); 
                     document.documentElement.style.setProperty('--question-modal-border-color', GameConfig.questionModalBorderColor); 
                     document.documentElement.style.setProperty('--answer-button-bg-color', GameConfig.answerButtonBgColor); 
-                    document.documentElement.style.setProperty('--answer-button-hover-color', GameConfig.answerButtonHoverColor); // NEW
+                    document.documentElement.style.setProperty('--answer-button-hover-color', GameConfig.answerButtonHoverColor); 
 
 
                     (function() {
