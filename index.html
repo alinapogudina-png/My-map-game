@@ -145,8 +145,7 @@
 <body>
 
     <div id="app">
-        <!-- СПЕЦИАЛЬНАЯ МЕТКА: Если вы видите этот заголовок на сайте, значит кэш сбросился -->
-        <h1>Редактор Карты-Квеста (Версия со звуком)</h1>
+        <h1>Редактор Карты-Квеста (Свои звуки)</h1>
         <div class="sub-text">Создайте свою игру, настроив параметры ниже, и получите готовый код для Genially.</div>
 
         <div id="settings-panel">
@@ -164,6 +163,13 @@
             
             <label for="artifactSize">Размер артефакта (px):</label>
             <input type="number" id="artifactSize" value="60">
+
+            <h3 class="group-label">Звуки</h3>
+            <label for="artifactClickSoundUrl">URL звука при клике на артефакт (открытие):</label>
+            <input type="text" id="artifactClickSoundUrl" value="https://files.catbox.moe/6wo57y.mp3">
+            
+            <label for="correctSoundUrl">URL звука при правильном ответе (сбор на панель):</label>
+            <input type="text" id="correctSoundUrl" value="https://files.catbox.moe/6n1mv9.mp3">
 
             <h3 class="group-label">Следы</h3>
             <label for="footprintImageUrl">URL изображения следа:</label>
@@ -276,6 +282,8 @@ I ___ not tired.|am|is|are
             bgSize: document.getElementById('bgSize'), 
             artifactImageUrls: document.getElementById('artifactImageUrls'), 
             artifactSize: document.getElementById('artifactSize'),
+            artifactClickSoundUrl: document.getElementById('artifactClickSoundUrl'), // NEW
+            correctSoundUrl: document.getElementById('correctSoundUrl'), // NEW
             footprintImageUrl: document.getElementById('footprintImageUrl'),
             welcomeMessage: document.getElementById('welcomeMessage'),
             startButtonColor: document.getElementById('startButtonColor'),
@@ -694,8 +702,10 @@ I ___ not tired.|am|is|are
                     <button id="mute-btn" title="Включить/Выключить звук">🔊</button>
                 </div>
 
-                <audio id="correct-sound" src="https://files.catbox.moe/6n1mv9.mp3" preload="auto"></audio>
-                <audio id="chest-open-sound" src="https://files.catbox.moe/6wo57y.mp3" preload="auto"></audio>
+                <!-- Подставляем новые звуки из полей редактора -->
+                <audio id="correct-sound" src="${editorElements.correctSoundUrl.value.trim()}" preload="auto"></audio>
+                <audio id="chest-open-sound" src="${editorElements.artifactClickSoundUrl.value.trim()}" preload="auto"></audio>
+                
                 <audio id="final-target-sound" src="https://files.catbox.moe/4blw0b.mp3" preload="auto"></audio>
                 <audio id="wrong-answer-sound" src="https://files.catbox.moe/6e8vp7.mp3" preload="auto"></audio>
 
