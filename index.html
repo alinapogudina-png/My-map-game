@@ -1,440 +1,309 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Education Map Game Demo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body { margin:0; font-family:sans-serif; background:#eef1fb; }
-  #map {
-    position:relative; 
-    width:95vw; max-width:800px; height:68vw; max-height:500px; 
-    background:url('https://i.imgur.com/6UTvQrb.jpg') center/cover no-repeat;
-    margin: 1.5em auto 0 auto; border:3px solid #444; border-radius:12px; overflow:hidden;
-    box-shadow:0 0 16px #0002;
-    touch-action:none;
-  }
-  .artifact {
-    width:10vw; max-width:38px; min-width:28px; aspect-ratio:1/1;
-    background:url('https://cdn-icons-png.flaticon.com/512/235/235861.png') center/cover no-repeat;
-    position:absolute; opacity:0; cursor:pointer; z-index:2;
-    transition:opacity .2s;
-    user-select:none;
-  }
-  .artifact.visible { opacity:1; }
-  .artifact.temp-hide {opacity:0 !important; pointer-events:none;}
-  .shake { animation: shake .34s; }
-  @keyframes shake { 10%{transform:translateX(-8px);} 30%{transform:translateX(8px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
-  .path-step {
-    width:9vw; min-width:22px; max-width:30px;
-    aspect-ratio:1/1;
-    background:url('https://cdn-icons-png.flaticon.com/512/763/763704.png') center/cover no-repeat;
-    position:absolute; z-index:3;
-    transition: left 1.3s cubic-bezier(.41,1.27,.5,1), top 1.3s cubic-bezier(.41,1.27,.5,1), opacity .7s;
-    pointer-events:none;
-  }
-  #stored-step-row {
-    display:flex; flex-direction:row; position:absolute; left:4vw; top:1vw; z-index:10; height:36px;
-    background:rgba(202,202,255,0.02); border-radius:8px; padding:1vw 2vw;
-  }
-  #counter {
-    position:absolute; top:1vw; right:4vw; z-index:11; min-width:100px; min-height:38px;
-    background-size:cover;
-    box-shadow: 0 2px 16px #0004;
-    color: #1446bc; font-weight: bold; font-size:5vw; max-font-size:22px;
-    display:flex; align-items:center; justify-content:center;
-    border-radius:16px; padding:7px 16px; transition: background 0.2s;
-    font-family:Arial;
-  }
-  #final {
-    position:absolute;width:14vw;max-width:40px;height:14vw;max-height:40px;z-index:3;left:86vw;top:54vw;display:none;
-    background:url('https://cdn-icons-png.flaticon.com/512/709/709790.png') center/cover no-repeat;
-    cursor:pointer;
-    transition: box-shadow .2s;
-  }
-  #question-modal {
-    display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#0008; z-index:200;
-    align-items:center; justify-content:center;
-  }
-  #question-box {
-    background:#fff; padding:3vw 4vw; border-radius:12px; min-width:200px; text-align:center; font-size:4vw; max-width:85vw; box-shadow:0 8px 24px #0002;
-  }
-  button, #lang-select, #customize-bar input, #customize-bar select {
-    font-size:1.2em; border-radius:7px; border:1px solid #aaa; padding: .3em .9em;
-  }
-  #customize-bar {
-    margin:1.1em auto 0 auto; width:min(97vw,780px); background:#eee; padding:10px 2vw;
-    border-radius:7px; box-shadow:0 2px 8px #0002; display:flex;align-items:center;gap:16px; flex-wrap:wrap;
-  }
-  #start-modal, #end-modal {
-    position:fixed; left:0;top:0;right:0;bottom:0;z-index:999;background:#0008;
-    display:flex;align-items:center;justify-content:center;
-  }
-  #start-content, #end-content {
-    background:#fff; border-radius:18px; padding:2.3vw 3vw 2vw 3vw;
-    box-shadow:0 8px 56px #0005; font-size:4vw; max-width:87vw; text-align:center;
-  }
-  #end-content {font-size:3.2vw;}
-  @media(max-width:540px){
-    #map {height:72vw;max-height:72vw;} 
-    #stored-step-row{height:10vw;}
-    #final{left:78vw;top:62vw;}
-    #customize-bar{font-size:0.94em;}
-    #counter{font-size:4vw; min-width:68px;}
-    #question-box{font-size:5vw;}
-  }
-  /* Кнопка звука */
-  #sound-btn {
-      position:fixed;
-      z-index:9999;
-      right:2vw;
-      bottom:2vw;
-      width:40px;
-      height:40px;
-      background:rgba(255,255,255,0.78);
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 3px 12px #0004;
-      cursor:pointer;
-      transition:.2s background;
-  }
-  #sound-btn:hover{background:rgba(220,220,255,0.99);}
-  #sound-btn svg{width:28px;height:28px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта-квест</title>
+    <style>
+        body {
+            background: #eaf0fa;
+            font-family: Arial, sans-serif;
+            margin: 0; padding: 0;
+        }
+        #start-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh;
+            background: rgba(32,56,95,0.33);
+        }
+        #start-game-btn {
+            font-size: 2em; padding: 0.8em 1.7em;
+            background: #8FC1E3; color: #334e6f; border: none; border-radius: 12px;
+            cursor: pointer; box-shadow: 0 4px 18px #4442;
+            transition: background 0.2s;
+        }
+        #start-game-btn:hover { background: #A0D8F1; }
+
+        .hidden { display: none !important; }
+
+        #game-content {
+            padding: 0;
+            min-height: 100vh;
+        }
+        #game-container {
+            position: relative;
+            width: 80vw; max-width: 950px; min-width: 300px;
+            margin: 30px auto 0 auto;
+            background: url('https://cdn.pixabay.com/photo/2013/07/13/14/14/map-162425_1280.png') center/cover no-repeat #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 23px #0003;
+            min-height: 600px;
+            overflow: hidden;
+        }
+        #artifacts-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .artifact {
+            width: 38px; height: 38px; position: absolute;
+            background: url('https://cdn-icons-png.flaticon.com/512/235/235861.png') center/contain no-repeat;
+            opacity: 0.85; cursor: pointer; transition: opacity 0.2s;
+        }
+        .artifact.found { opacity: 0.18; pointer-events: none; }
+        #footprints-container {
+            position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none;
+        }
+        .footprint {
+            width: 28px; height: 28px; position: absolute;
+            background: url('https://cdn-icons-png.flaticon.com/512/763/763704.png') center/contain no-repeat;
+        }
+        #collected-artifacts-panel {
+            position: absolute; top: 10px; left: 10px; right: 170px;
+            min-height: 30px; z-index: 2;
+        }
+        #score-counter {
+            position: absolute; top: 17px; right: 23px; font-size: 1.65em;
+            background: rgba(231,239,251,0.9);
+            color: #1651a5; font-weight:bold; padding: 7px 25px;
+            border-radius: 16px; z-index: 2;
+            box-shadow: 0 2px 8px #0001;
+            letter-spacing: 2px;
+            user-select:none;
+        }
+        #final-target {
+            position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
+            background: #78e099; color: #234726; 
+            text-align: center; padding: 20px 32px; border-radius: 20px;
+            font-size: 1.7em; font-weight: bold; text-decoration: none;
+            box-shadow: 0 4px 18px #4442;
+            border: 2px solid #4bb55e;
+            transition: background 0.2s;
+        }
+        #final-target:hover { background: #bdf3c9; }
+
+        #modal-overlay {
+            position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+            background: rgba(25,25,45,0.60); z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #modal {
+            background: #fff; padding: 33px 38px 28px 38px; border-radius: 18px;
+            min-width: 260px; max-width: 92vw; box-shadow: 0 8px 38px #0005;
+            text-align: center; font-size: 1.38em;
+        }
+        .answer-btn {
+            display: block; font-size: 1em; margin: 13px auto; padding: 8px 24px;
+            border-radius: 9px; border: none; background: #deddfa;
+            color: #123366; font-weight: bold; box-shadow: 0 2px 8px #8aa2cc84;
+            cursor: pointer; min-width: 120px; transition: background 0.2s;
+        }
+        .answer-btn:hover { background: #c3e2f5; }
+
+        /* Кнопка звука */
+        #sound-btn {
+            position:fixed;
+            z-index:9999;
+            right:22px;
+            bottom:22px;
+            width:46px;
+            height:46px;
+            background:rgba(255,255,255,0.92);
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:0 3px 12px #0004;
+            cursor:pointer;
+            transition:.2s background;
+        }
+        #sound-btn:hover{background:rgba(220,238,255,0.99);}
+        #sound-btn svg{width:30px;height:30px;}
+        @media (max-width:760px){
+            #game-container { min-height: 420px; }
+            .artifact, .footprint{ width: 28px; height: 28px;}
+            #final-target{font-size:1.25em;padding:13px 10px;}
+        }
+    </style>
 </head>
 <body>
-<div id="customize-bar">
-  <b>Настройки:</b>
-  Фон счетчика:
-  <select id="counter-bg">
-    <option value="cloud">Облака</option>
-    <option value="paper">Бумага</option>
-    <option value="star">Звёзды</option>
-  </select>
-  Цвет текста: <input type="color" id="counter-color" value="#1446bc">
-  Шрифт: 
-  <select id="counter-font">
-    <option value="Arial">Arial</option>
-    <option value="Verdana">Verdana</option>
-    <option value="Georgia">Georgia</option>
-    <option value="Comic Sans MS">Comic Sans MS</option>
-  </select>
-  Язык:
-  <select id="lang-select">
-    <option value="RU">Русский</option>
-    <option value="EN">English</option>
-  </select>
-</div>
 
-<!-- Вводное сообщение -->
-<div id="start-modal">
-  <div id="start-content">
-    <span id="intro-msg"></span><br><br>
-    <button id="start-btn">Старт!</button>
-  </div>
-</div>
+    <div id="start-screen">
+        <button id="start-game-btn">Start the adventure!</button>
+    </div>
 
-<!-- Карта -->
-<div id="map">
-  <div id="counter">Артефактов: 0/3</div>
-  <div id="stored-step-row"></div>
-  <div class="artifact" data-idx="0" style="top: 12vw; left: 23vw;"></div>
-  <div class="artifact" data-idx="1" style="top: 60vw; left: 48vw;"></div>
-  <div class="artifact" data-idx="2" style="top: 38vw; left: 74vw;"></div>
-  <div id="final"></div>
-</div>
+    <div id="game-content" class="hidden">
+        <div id="game-container">
+            <div id="artifacts-container"></div>
+            <div id="footprints-container"></div>
+            <div id="collected-artifacts-panel"></div>
+            <div id="score-counter">0 / 5</div>
+            <a href="https://www.genial.ly" target="_blank" id="final-target" class="hidden">
+                Fantastic!<br>Here is our secret place!
+            </a>
+        </div>
 
-<!-- Окно вопроса -->
-<div id="question-modal">
-  <div id="question-box">
-    <div id="question-text"></div>
-    <input type="text" id="answer" placeholder="">
-    <br><br>
-    <button onclick="checkAnswer()"></button>
-    <div id="message" style="color:red; margin-top:5px;"></div>
-  </div>
-</div>
+        <div id="modal-overlay" class="hidden">
+            <div id="modal">
+                <p id="question-text"></p>
+                <div id="answers-container"></div>
+            </div>
+        </div>
+    </div>
 
-<!-- Финал -->
-<div id="end-modal" style="display:none">
-  <div id="end-content">
-    <span id="end-msg"></span>
-    <br><br><button onclick="restart()"></button>
-  </div>
-</div>
+    <!-- Аудио для звуковых эффектов -->
+    <audio id="correct-sound" src="https://files.catbox.moe/6n1mv9.mp3" preload="auto"></audio>
+    <audio id="chest-open-sound" src="https://files.catbox.moe/6wo57y.mp3" preload="auto"></audio>
+    <audio id="final-target-sound" src="https://files.catbox.moe/4blw0b.mp3" preload="auto"></audio>
+    <audio id="wrong-answer-sound" src="https://files.catbox.moe/6e8vp7.mp3" preload="auto"></audio>
 
-<!-- Кнопка звука -->
-<div id="sound-btn" title="Отключить звук">
-  <svg id="sound-on" style="display:block;" viewBox="0 0 24 24" fill="none"><path d="M3 10V14H7L12 19V5L7 10H3Z" fill="#0a355c"/></svg>
-  <svg id="sound-off" style="display:none;" viewBox="0 0 24 24" fill="none"><path d="M16.5 12C16.5 13.3807 15.8807 14.6307 14.8504 15.5156M17.6105 17.1684L6.83159 6.38948M4 19.25L19.25 4M12 4.75V19.25" stroke="#792d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-</div>
+    <!-- КНОПКА ЗВУКА -->
+    <div id="sound-btn" title="Mute/unmute sound">
+        <svg id="sound-on" style="display:block;" viewBox="0 0 24 24" fill="none"><path d="M3 10V14H7L12 19V5L7 10H3Z" fill="#0a355c"/></svg>
+        <svg id="sound-off" style="display:none;" viewBox="0 0 24 24" fill="none"><path d="M16.5 12C16.5 13.3807 15.8807 14.6307 14.8504 15.5156M17.6105 17.1684L6.83159 6.38948M4 19.25L19.25 4M12 4.75V19.25" stroke="#792d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
 
-<script>
-  // --- АУДИО СИСТЕМА ---
-  let soundEnabled = true;
-  const sfx_ok = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b9ea174.mp3");   // Correct
-  const sfx_error = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b958799.mp3"); // Error
-  const sfx_final = new Audio("https://cdn.pixabay.com/audio/2022/10/16/audio_12ab154962.mp3"); // Final
-  const sfx_restart = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b9e2855.mp3");// Restart
+    <script>
+    // --- SOUND ---
+    let soundOn = true;
+    const btnSound = document.getElementById('sound-btn');
+    btnSound.onclick = function() {
+        soundOn = !soundOn;
+        document.getElementById('sound-on').style.display = soundOn ? "block" : "none";
+        document.getElementById('sound-off').style.display = !soundOn ? "block" : "none";
+    };
 
-  function play_ok(){ if(soundEnabled){ sfx_ok.pause(); sfx_ok.currentTime=0; sfx_ok.play(); } }
-  function play_error(){ if(soundEnabled){ sfx_error.pause(); sfx_error.currentTime=0; sfx_error.play(); } }
-  function play_final(){ if(soundEnabled){ sfx_final.pause(); sfx_final.currentTime=0; sfx_final.play(); } }
-  function play_restart(){ if(soundEnabled){ sfx_restart.pause(); sfx_restart.currentTime=0; sfx_restart.play(); } }
-
-  const soundBtn = document.getElementById('sound-btn');
-  soundBtn.onclick = function(){
-      soundEnabled = !soundEnabled;
-      document.getElementById('sound-on').style.display = soundEnabled ? "block" : "none";
-      document.getElementById('sound-off').style.display = !soundEnabled ? "block" : "none";
-      soundBtn.title = soundEnabled ? "Отключить звук" : "Включить звук";
-  };
-
-  // -- Данные для языка, вопросов, сообщений --
-  let dict = {
-    RU:{
-      intro: "Cобери все артефакты!",
-      final: "Молодец! Ты нашёл секретное место!",
-      q: [
-        "Кто лесной народ в Средиземье? (эльф, гном, маг)",
-        "Кто добывает руду под горами?",
-        "Как называют могущественного обладателя посоха?"
-      ],
-      a:["эльф","гном","волшебник"],
-      answer:"Ответить",
-      found:"Артефактов: ",
-      of:" из ",
-      restart:"Попробовать еще раз",
-      wrong:["Неверно, попробуйте еще!","Подсказка: ищите в сказочных лесах :)","3 ошибки — начало сначала!"],
-      placeholder:"Введите ответ..."
-    },
-    EN:{
-      intro: "Collect all the artifacts!",
-      final: "Good job! You have found the secret place!",
-      q: [
-        "Who are the forest folk of Middle-earth? (elf, dwarf, wizard)",
-        "Who mines ore under the mountains?",
-        "What do you call a mighty staff-owner?"
-      ],
-      a:["elf","dwarf","wizard"],
-      answer:"Answer",
-      found:"Artifacts: ",
-      of:" of ",
-      restart:"Try again",
-      wrong:["Wrong, try again!","Hint: hiding in fairytale woods :)","3 mistakes — restart!"],
-      placeholder:"Enter your answer..."
+    function playIfOn(audio){
+        if(soundOn) {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play();
+        }
     }
-  };
-  let LANG ="RU";
 
-  // -- Кастомизация счетчика --
-  const counter = document.getElementById('counter');
-  const counterBgs = {
-    cloud: 'url(https://cdn.pixabay.com/photo/2010/12/13/10/09/clouds-1999_1280.jpg)',
-    paper: 'url(https://cdn.pixabay.com/photo/2017/01/06/19/15/paper-1955842_1280.jpg)',
-    star: 'url(https://cdn.pixabay.com/photo/2013/10/07/14/29/stars-191999_1280.jpg)',
-  };
-  function updateCounterStyle(){
-    counter.style.backgroundImage = counterBgs[document.getElementById('counter-bg').value];
-    counter.style.color = document.getElementById('counter-color').value;
-    counter.style.fontFamily = document.getElementById('counter-font').value;
-  }
-  document.getElementById('counter-bg').onchange = updateCounterStyle;
-  document.getElementById('counter-color').oninput = updateCounterStyle;
-  document.getElementById('counter-font').onchange = updateCounterStyle;
-  updateCounterStyle();
+    // --- GAME DATA (edit here!) ---
+    const ARTIFACTS = [
+        {x: 14, y: 31, question: "What is the capital of France?", answers:["Paris", "London", "Rome"], correct:0},
+        {x: 70, y: 62, question: "The largest planet?", answers:["Mars", "Venus", "Jupiter"], correct:2},
+        {x: 50, y: 28, question: "Color of the sky?", answers:["Blue", "Red", "Green"], correct:0},
+        {x: 23, y: 70, question: "Which animal barks?", answers:["Cat", "Dog", "Cow"], correct:1},
+        {x: 75, y: 18, question: "How many days in a week?", answers:["5", "7", "10"], correct:1},
+    ];
+    // Укажите выше еще такие объекты для большего количества артефактов.
+    // x и y — в процентах от размера карты, чтобы все было адаптивно
 
-  // -- Выбор языка --
-  document.getElementById('lang-select').onchange = ev=>{
-    LANG = ev.target.value;
-    refreshLang();
-  };
-  function refreshLang(){
-    document.getElementById('intro-msg').textContent = dict[LANG].intro;
-    document.getElementById('start-btn').textContent = "Старт!";
-    document.querySelector("#question-modal button").textContent=dict[LANG].answer;
-    document.getElementById("end-msg").textContent=dict[LANG].final;
-    document.querySelector("#end-modal button").textContent=dict[LANG].restart;
-    document.getElementById("answer").placeholder=dict[LANG].placeholder;
-    updateCounter();
-  }
+    // --- GAME LOGIC ---
+    let collected = Array(ARTIFACTS.length).fill(false);
+    let collectedCount = 0;
 
-  // -- Вводное сообщение --
-  document.getElementById('intro-msg').textContent = dict[LANG].intro;
-  document.getElementById('start-btn').onclick = function(){
-    document.getElementById('start-modal').style.display='none';
-  }
+    const startScreen = document.getElementById('start-screen');
+    const gameContent = document.getElementById('game-content');
+    const artifactsContainer = document.getElementById('artifacts-container');
+    const footprintsContainer = document.getElementById('footprints-container');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modal = document.getElementById('modal');
+    const scoreCounter = document.getElementById('score-counter');
+    const finalTarget = document.getElementById('final-target');
+    const correctSound = document.getElementById('correct-sound');
+    const chestSound = document.getElementById('chest-open-sound');
+    const finalSound = document.getElementById('final-target-sound');
+    const wrongSound = document.getElementById('wrong-answer-sound');
+    const answersContainer = document.getElementById('answers-container');
+    const questionText = document.getElementById('question-text');
 
-  // -- Вопросы/ответы, движение, адаптация --
-  const artifacts = document.querySelectorAll('.artifact');
-  let n = dict[LANG].q.length;
-  let found = 0, foundSteps = [];
-  let pathSteps = [];
-  let currentArtifact = null, mistakes = [0,0,0];
-  let ROUND = 1, TEMP_HIDE = [false,false,false];
-
-  // -- Обновление счетчика --
-  function updateCounter() {
-    counter.textContent = dict[LANG].found + found + dict[LANG].of + n;
-  }
-
-  // -- Лента для следов --
-  const storedRow = document.getElementById('stored-step-row');
-
-  // -- Демонстрация артефактов при наведении --
-  document.getElementById('map').addEventListener('mousemove', e => {
-    const rect = e.target.closest('#map').getBoundingClientRect();
-    artifacts.forEach(a=>{
-      let ax = a.offsetLeft + a.offsetWidth/2, ay = a.offsetTop + a.offsetHeight/2;
-      let dist = Math.hypot(e.clientX-rect.left-ax, e.clientY-rect.top-ay);
-      if (dist < 66 && !a.classList.contains('collected') && !a.classList.contains('temp-hide')) a.classList.add('visible');
-      else if (!a.classList.contains('collected') && !a.classList.contains('temp-hide')) a.classList.remove('visible');
-    });
-  });
-
-  // --- Мобильное: по тапу рядом показать/спрятать —
-  document.getElementById('map').addEventListener('touchstart', e=>{
-    let x = e.touches[0].clientX, y = e.touches[0].clientY;
-    const rect = e.target.closest('#map').getBoundingClientRect();
-    artifacts.forEach(a=>{
-      let ax = a.offsetLeft + a.offsetWidth/2 + rect.left, ay = a.offsetTop + a.offsetHeight/2 + rect.top;
-      let dist = Math.hypot(x-ax, y-ay);
-      if (dist < 67 && !a.classList.contains('collected') && !a.classList.contains('temp-hide')) a.classList.add('visible');
-      else if (!a.classList.contains('collected') && !a.classList.contains('temp-hide')) a.classList.remove('visible');
-    });
-  });
-
-  artifacts.forEach((art, idx)=>{
-    art.onclick = ()=>{ if (!art.classList.contains('temp-hide')){ currentArtifact={node:art, idx}; showQuestion(idx);} };
-    art.ontouchend = ()=>{if (!art.classList.contains('temp-hide')){ currentArtifact={node:art, idx}; showQuestion(idx);} };
-  });
-
-  // -- Окно вопроса --
-  function showQuestion(idx){
-    document.getElementById('question-modal').style.display = 'flex';
-    document.getElementById('question-text').textContent = dict[LANG].q[idx];
-    document.getElementById('answer').value = "";
-    document.getElementById('message').textContent = "";
-    document.getElementById('answer').focus();
-  }
-
-  // -- Анимация ошибки
-  function animateShake(node){
-    node.classList.remove('shake');
-    setTimeout(function(){node.classList.add('shake');}, 10);
-    setTimeout(function(){node.classList.remove('shake');}, 400);
-  }
-
-  function checkAnswer(){
-    let idx = currentArtifact.idx, art = currentArtifact.node;
-    let a = document.getElementById('answer').value.trim().toLowerCase();
-    if(a === dict[LANG].a[idx]){
-      play_ok();
-      document.getElementById('question-modal').style.display = 'none';
-      collectArtifact(art, idx);
-    } else {
-      play_error();
-      mistakes[idx]++;
-      animateShake(document.getElementById('question-box'));
-      animateShake(art);
-      if(mistakes[idx]===1){
-        document.getElementById('message').textContent = dict[LANG].wrong[0];
-        art.classList.add('temp-hide');
-        setTimeout(()=>{art.classList.remove('temp-hide');},10000);
-      }
-      else if(mistakes[idx]===2){
-        document.getElementById('message').textContent = dict[LANG].wrong[1];
-        art.classList.add('temp-hide');
-        setTimeout(()=>{art.classList.remove('temp-hide');},10000);
-      }
-      else if(mistakes[idx]>=3){
-        play_restart();
-        document.getElementById('message').textContent = dict[LANG].wrong[2];
-        setTimeout(()=>restart(),1400)
-      }
+    function resetGame() {
+        collected = Array(ARTIFACTS.length).fill(false);
+        collectedCount = 0;
+        scoreCounter.textContent = `0 / ${ARTIFACTS.length}`;
+        artifactsContainer.innerHTML = '';
+        footprintsContainer.innerHTML = '';
+        finalTarget.classList.add('hidden');
+        renderArtifacts();
     }
-  }
 
-  function collectArtifact(node, idx){
-    node.classList.add('collected'); node.style.display='none';
-    found++; updateCounter();
-    // След — в ленту
-    let step = document.createElement('div'); step.className='path-step';
-    step.style.position = 'static'; step.style.opacity=1;
-    storedRow.appendChild(step);
-    pathSteps.push({dom:step, mapX:node.style.left, mapY:node.style.top});
-    foundSteps.push([parseFloat(node.style.left),parseFloat(node.style.top)]);
-    if(found === n){ setTimeout(showFinal,750);}
-  }
+    function renderArtifacts() {
+        ARTIFACTS.forEach((item, idx) => {
+            if(collected[idx]) return;
+            const div = document.createElement('div');
+            div.className = 'artifact';
+            div.style.left = item.x + "%";
+            div.style.top = item.y + "%";
+            div.title = "Какой-то артефакт";
+            div.addEventListener('mouseenter', () => div.style.opacity = 1.0);
+            div.addEventListener('mouseleave', () => div.style.opacity = 0.85);
+            div.addEventListener('click', () => showQuestion(idx));
+            artifactsContainer.appendChild(div);
+        });
+    }
 
-  // -- Перемещение следов на карту (плавно) + линия --
-  function showFinal(){
-    counter.textContent = dict[LANG].found + n + dict[LANG].of + n;
-    document.getElementById('final').style.display = '';
-    play_final();
-    let map = document.getElementById('map');
-    let delay = 0;
-    pathSteps.forEach((stepObj,i)=>{
-      let step = stepObj.dom;
-      let x = stepObj.mapX, y = stepObj.mapY;
-      step.style.position = "absolute";
-      step.style.transition = "left 1.3s cubic-bezier(.41,1.27,.5,1), top 1.3s cubic-bezier(.41,1.27,.5,1), opacity 1s";
-      step.style.left = (4 + i*8) + "vw";
-      step.style.top = "1vw";
-      setTimeout(()=>{
-        step.style.left = x;
-        step.style.top = y;
-      },1350+i*650);
-    });
-    setTimeout(drawRoute, 2200+800*n);
-    setTimeout(function(){
-      document.getElementById('end-modal').style.display='flex';
-    },2800+900*n);
-  }
+    function showQuestion(idx) {
+        if (collected[idx]) return;
+        questionText.textContent = ARTIFACTS[idx].question;
+        answersContainer.innerHTML = '';
+        ARTIFACTS[idx].answers.forEach((ans, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn';
+            btn.textContent = ans;
+            btn.onclick = () => checkAnswer(idx, i);
+            answersContainer.appendChild(btn);
+        });
+        modalOverlay.classList.remove('hidden');
+    }
 
-  // -- Линия маршрута --
-  function drawRoute(){
-    let svgId = "route-svg";
-    let svg = document.getElementById(svgId);
-    if (!svg){ svg = document.createElementNS('http://www.w3.org/2000/svg',"svg"); svg.setAttribute("id",svgId); document.getElementById('map').appendChild(svg);}
-    svg.innerHTML = ""; svg.style.display="block";
-    svg.setAttribute("style","position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;");
-    let coords = [...foundSteps, [86,54]];
-    let d = coords.map((p,i)=> (i===0?'M':'L')+(p[0]+4)+"vw,"+(p[1]+4)+"vw").join(' ');
-    svg.innerHTML = `<path d="${d}" stroke="gold" stroke-width="5" fill="none" stroke-dasharray="14"/>`;
-  }
+    function checkAnswer(idx, answerIdx) {
+        if (answerIdx === ARTIFACTS[idx].correct) {
+            playIfOn(correctSound);
+            collectArtifact(idx);
+        } else {
+            playIfOn(wrongSound);
+            modal.classList.add('shake');
+            setTimeout(()=>modal.classList.remove('shake'), 500);
+        }
+    }
 
-  // Финальная точка - переход
-  document.getElementById('final').onclick = ()=> {
-    window.location.href="https://genially.com";
-  }
+    function collectArtifact(idx) {
+        collected[idx] = true;
+        collectedCount += 1;
 
-  // RESTART!
-  function restart(){
-    document.getElementById('end-modal').style.display='none';
-    found=0; foundSteps=[]; pathSteps=[]; ROUND++;
-    mistakes=[0,0,0]; TEMP_HIDE=[false,false,false];
-    artifacts.forEach(a=>{ a.className='artifact'; a.style.display=''; a.classList.remove('temp-hide');});
-    document.querySelectorAll('.path-step').forEach(e=>e.remove());
-    let s=document.getElementById('route-svg'); if(s)s.remove();
-    document.getElementById('final').style.display='none';
-    storedRow.innerHTML='';
-    updateCounter();
-    document.getElementById('start-modal').style.display='flex';
-  }
+        // Футпринт на карту:
+        const f = document.createElement('div');
+        f.className = 'footprint';
+        f.style.left = ARTIFACTS[idx].x + '%';
+        f.style.top = ARTIFACTS[idx].y + '%';
+        footprintsContainer.appendChild(f);
 
-  window.onload = function(){
-    refreshLang();
-    updateCounter();
-  }
+        modalOverlay.classList.add('hidden');
 
-  document.getElementById('counter-bg').onchange=updateCounterStyle;
-  document.getElementById('counter-color').oninput=updateCounterStyle;
-  document.getElementById('counter-font').onchange=updateCounterStyle;
-  document.getElementById('lang-select').onchange=function(){ LANG=this.value; refreshLang(); }
+        // Убрать артефакт
+        Array.from(artifactsContainer.children)[idx].classList.add('found');
 
-</script>
+        scoreCounter.textContent = `${collectedCount} / ${ARTIFACTS.length}`;
+
+        // Если все собрано:
+        if(collectedCount === ARTIFACTS.length) {
+            setTimeout(()=>{
+                playIfOn(chestSound);
+                finalTarget.classList.remove('hidden');
+                setTimeout(() => playIfOn(finalSound), 200);
+            }, 350);
+        }
+    }
+
+    document.getElementById('start-game-btn').onclick = () => {
+        startScreen.classList.add('hidden');
+        gameContent.classList.remove('hidden');
+        resetGame();
+    };
+
+    modalOverlay.onclick = (e) => {
+        // клик мимо модального окна — не закрывать окно
+        if (e.target === modalOverlay) return;
+    };
+
+    // Стартовая инициализация
+    resetGame();
+
+    // Для мобильных (фиксим кнопку звука)
+    window.addEventListener('touchstart', function(){}, true);
+
+    </script>
 </body>
 </html>
