@@ -145,7 +145,8 @@
 <body>
 
     <div id="app">
-        <h1>Редактор Карты-Квеста</h1>
+        <!-- СПЕЦИАЛЬНАЯ МЕТКА: Если вы видите этот заголовок на сайте, значит кэш сбросился -->
+        <h1>Редактор Карты-Квеста (Версия со звуком)</h1>
         <div class="sub-text">Создайте свою игру, настроив параметры ниже, и получите готовый код для Genially.</div>
 
         <div id="settings-panel">
@@ -153,15 +154,12 @@
             <label for="mapBgUrl">URL фоновой карты:</label>
             <input type="text" id="mapBgUrl" value="https://i.postimg.cc/3Rkk1S6Q/b219cb5f0eb82c4c39988678151c1c54-d268a249-fd6e-4693-ae94-1f59641e8769.jpg"> 
             
-            <!-- Удалена опция "Размер фона", теперь всегда cover -->
             <input type="hidden" id="bgSize" value="cover">
-            
-            <!-- Опция выбора позиции фона убрана, фон всегда center -->
             <input type="hidden" id="bgPosition" value="center">
 
             <h3 class="group-label">Артефакты</h3>
             <label for="artifactImageUrls">URL изображений артефактов (каждая строка - отдельная ссылка):</label>
-            <textarea id="artifactImageUrls">https://i.postimg.cc/TYktLZfk/treasure-chest.png</textarea> <!-- DEFAULT URL CHANGED -->
+            <textarea id="artifactImageUrls">https://i.postimg.cc/TYktLZfk/treasure-chest.png</textarea> 
             <div class="help-text">Если ссылок несколько, артефакты будут чередоваться. Для панели собираемых отображается каждый собранный.</div>
             
             <label for="artifactSize">Размер артефакта (px):</label>
@@ -180,7 +178,7 @@
             <label for="finalMessage">Текст финального сообщения:</label>
             <input type="text" id="finalMessage" value="Fantastic! Here is our secret place!">
             <label for="finalLinkUrl">URL для финальной ссылки:</label>
-            <input type="text" id="finalLinkUrl" value=""> <!-- DEFAULT VALUE CHANGED TO EMPTY -->
+            <input type="text" id="finalLinkUrl" value=""> 
             <div class="help-text">Если поле пустое, финальное сообщение будет некликабельным текстом.</div>
 
             <h3 class="group-label">Вопросы и ответы</h3>
@@ -205,8 +203,8 @@ I ___ not tired.|am|is|are
             <input type="color" id="questionModalBorderColor" value="#8B4513">
             <label for="answerButtonBgColor">Цвет фона кнопок ответов:</label>
             <input type="color" id="answerButtonBgColor" value="#c5a072">
-            <label for="answerButtonHoverColor">Цвет подсветки кнопок ответов (при наведении):</label> <!-- NEW -->
-            <input type="color" id="answerButtonHoverColor" value="#FDFD96"> <!-- NEW, default light yellow -->
+            <label for="answerButtonHoverColor">Цвет подсветки кнопок ответов (при наведении):</label>
+            <input type="color" id="answerButtonHoverColor" value="#FDFD96"> 
 
             <h3 class="group-label">Позиции на карте</h3>
             <label for="artifactPositions">Позиции артефактов (каждая строка: top% left%):</label>
@@ -287,7 +285,7 @@ I ___ not tired.|am|is|are
             questionModalBgColor: document.getElementById('questionModalBgColor'),
             questionModalBorderColor: document.getElementById('questionModalBorderColor'),
             answerButtonBgColor: document.getElementById('answerButtonBgColor'),
-            answerButtonHoverColor: document.getElementById('answerButtonHoverColor'), // NEW
+            answerButtonHoverColor: document.getElementById('answerButtonHoverColor'), 
             artifactPositions: document.getElementById('artifactPositions'),
             finalTargetTop: document.getElementById('finalTargetTop'),
             finalTargetLeft: document.getElementById('finalTargetLeft'),
@@ -304,7 +302,6 @@ I ___ not tired.|am|is|are
             previewIframe: document.getElementById('preview-iframe') 
         };
 
-        // Переключение видимости настроек неоновой подсветки
         editorElements.neonQuestionGlowEnabled.addEventListener('change', () => {
             editorElements.neonGlowSettings.style.display = editorElements.neonQuestionGlowEnabled.checked ? 'block' : 'none';
             updatePreview();
@@ -316,7 +313,6 @@ I ___ not tired.|am|is|are
             return lines.map(line => {
                 const parts = line.split('|').map(p => p.trim());
                 if (parts.length < 2) {
-                    console.warn(`Вопрос некорректно отформатирован: "${line}". Пропускаем.`);
                     return null; 
                 }
                 const question = parts[0];
@@ -332,26 +328,17 @@ I ___ not tired.|am|is|are
             const lines = text.trim().split('\n').filter(Boolean);
             return lines.map(line => {
                 const parts = line.split(' ').map(p => p.trim());
-                if (parts.length !== 2) {
-                    console.warn(`Позиция артефакта некорректно отформатирована: "${line}". Ожидаются "top% left%". Пропускаем.`);
-                    return null;
-                }
-                // Убедимся, что проценты корректно распознаются
-                if (!parts[0].endsWith('%') || !parts[1].endsWith('%')) {
-                    console.warn(`Некорректный формат позиции: "${line}". Ожидаются значения в процентах (например, "50% 50%"). Пропускаем.`);
+                if (parts.length !== 2 || !parts[0].endsWith('%') || !parts[1].endsWith('%')) {
                     return null;
                 }
                 return { top: parts[0], left: parts[1] };
             }).filter(Boolean);
         }
         
-        // Новая функция для парсинга нескольких URL изображений артефактов
         function parseArtifactImageUrls(text) {
             return text.trim().split('\n').map(url => url.trim()).filter(Boolean);
         }
 
-        // ---------- helpers (из примера "Овечки") ----------
-        // Используется для безопасной вставки всего HTML-кода игры в атрибут srcdoc
         function escapeForSrcdoc(html){
             return String(html)
               .replaceAll("&","&amp;")
@@ -360,19 +347,15 @@ I ___ not tired.|am|is|are
               .replaceAll(">","&gt;");
         }
 
-        // Используется для безопасной вставки JS-объекта GameConfig в <script> тег
         function safeJson(obj){
             return JSON.stringify(obj)
-              .replaceAll("<","\\u003c") // Экранируем <
-              .replaceAll(">","\\u003e") // Экранируем >
-              .replaceAll("&","\\u0026"); // Экранируем &
+              .replaceAll("<","\\u003c") 
+              .replaceAll(">","\\u003e") 
+              .replaceAll("&","\\u0026"); 
         }
-        // ---------- конец helpers ----------
 
         function updatePreview() {
-            // Генерируем полный HTML-контент игры, который пойдет в srcdoc
             const innerHtmlContent = generateGameHtml();
-            // Устанавливаем srcdoc для iframe предпросмотра
             editorElements.previewIframe.srcdoc = innerHtmlContent;
         }
 
@@ -394,7 +377,6 @@ I ___ not tired.|am|is|are
             const baseWidth = 1280;
             const baseHeight = 720;
 
-            // --- Сформируем GameConfig для передачи в игру (внутри srcdoc) ---
             const gameConfig = {
                 mapBgUrl: editorElements.mapBgUrl.value,
                 bgSize: bgSizeValue, 
@@ -409,7 +391,7 @@ I ___ not tired.|am|is|are
                 questionModalBgColor: editorElements.questionModalBgColor.value, 
                 questionModalBorderColor: editorElements.questionModalBorderColor.value,
                 answerButtonBgColor: editorElements.answerButtonBgColor.value,
-                answerButtonHoverColor: editorElements.answerButtonHoverColor.value, // NEW
+                answerButtonHoverColor: editorElements.answerButtonHoverColor.value, 
                 artifactPositions: artifactPositionsArray,
                 finalTargetTop: editorElements.finalTargetTop.value + '%', 
                 finalTargetLeft: editorElements.finalTargetLeft.value + '%', 
@@ -420,7 +402,6 @@ I ___ not tired.|am|is|are
                 totalQuestions: totalQuestions 
             };
 
-            // HTML-контент, который будет в атрибуте srcdoc
             let innerHtmlContent = `
             <!DOCTYPE html>
             <html lang="ru">
@@ -430,7 +411,6 @@ I ___ not tired.|am|is|are
                 <title>Карта-квест</title>
                 ${fontImportLink}
                 <style>
-                    /* Объявляем CSS-переменные в :root, их значения будут установлены JavaScript */
                     :root {
                         --map-bg-url: url('');
                         --bg-size: cover;
@@ -446,7 +426,7 @@ I ___ not tired.|am|is|are
                         --question-modal-bg-color: #f3dcb8; 
                         --question-modal-border-color: #8B4513; 
                         --answer-button-bg-color: #c5a072; 
-                        --answer-button-hover-color: #FDFD96; /* NEW */
+                        --answer-button-hover-color: #FDFD96; 
                     }
 
                     html, body { 
@@ -457,7 +437,6 @@ I ___ not tired.|am|is|are
                         box-sizing: border-box; 
                         overflow: hidden; 
                         font-family: var(--game-font); 
-                        /* Фон игры теперь на body, чтобы заполнить весь iframe */
                         background: var(--map-bg-url) no-repeat center center; 
                         background-size: var(--bg-size); 
                         display: flex; 
@@ -472,7 +451,6 @@ I ___ not tired.|am|is|are
                         background-color: transparent; 
                         overflow: hidden; 
                         transform-origin: center center; 
-                        /* transform: scale() будет установлен JavaScript */
                     }
 
                     #start-screen, #game-content {
@@ -545,7 +523,7 @@ I ___ not tired.|am|is|are
                         top: 50%; 
                         transform: translateY(-50%);
                         width: 85px; 
-                        height: 684px; /* 95% от 720px */
+                        height: 684px; 
                         background-color: rgba(0, 0, 0, 0.4);
                         border-radius: 15px; 
                         padding: 10px 5px; 
@@ -654,15 +632,13 @@ I ___ not tired.|am|is|are
                         cursor: pointer; 
                         transition: background-color 0.2s; 
                     }
-                    
-                    /* ИСПРАВЛЕНА ОШИБКА ЗДЕСЬ: заменен HTML-комментарий на CSS-комментарий */
-                    .answer-btn:hover { background-color: var(--answer-button-hover-color); } /* NEW HOVER COLOR */
+                    .answer-btn:hover { background-color: var(--answer-button-hover-color); } 
                     
                     .shake { animation: shake 0.5s; }
                     @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); } 20%, 40%, 60%, 80% { transform: translateX(10px); } }
                     @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(0.95); } 70% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(0.95); } }
                     
-                    /* Стили для кнопки звука (ТЕПЕРЬ БУДУТ РАБОТАТЬ) */
+                    /* Стили для кнопки звука */
                     #mute-btn {
                         position: absolute;
                         bottom: 20px;
@@ -700,12 +676,9 @@ I ___ not tired.|am|is|are
                     <div id="game-content" class="hidden">
                         <div id="game-container">
                             <div id="artifacts-container"></div>
-                            
                             <div id="footprints-container"></div>
-
                             <div id="collected-artifacts-panel"></div>
                             <div id="score-counter"></div>
-
                             <a target="_blank" id="final-target" class="hidden"></a>
                         </div>
 
@@ -718,7 +691,7 @@ I ___ not tired.|am|is|are
                     </div>
                     
                     <!-- Кнопка выключения звука -->
-                    <button id="mute-btn">🔊</button>
+                    <button id="mute-btn" title="Включить/Выключить звук">🔊</button>
                 </div>
 
                 <audio id="correct-sound" src="https://files.catbox.moe/6n1mv9.mp3" preload="auto"></audio>
@@ -729,7 +702,6 @@ I ___ not tired.|am|is|are
                 <script>
                     const GameConfig = ${safeJson(gameConfig)};
 
-                    // Динамическая установка CSS-переменных из GameConfig
                     document.documentElement.style.setProperty('--map-bg-url', \`url(\${GameConfig.mapBgUrl})\`);
                     document.documentElement.style.setProperty('--bg-size', GameConfig.bgSize);
                     document.documentElement.style.setProperty('--artifact-size-px', \`\${GameConfig.artifactSizePx}px\`);
@@ -764,7 +736,8 @@ I ___ not tired.|am|is|are
                         const questionText = document.getElementById('question-text');
                         const answersContainer = document.getElementById('answers-container');
                         const finalTarget = document.getElementById('final-target');
-                        const muteBtn = document.getElementById('mute-btn'); // Кнопка звука
+                        
+                        const muteBtn = document.getElementById('mute-btn'); 
                         const sounds = { 
                             correct: document.getElementById('correct-sound'), 
                             open: document.getElementById('chest-open-sound'), 
@@ -775,23 +748,20 @@ I ___ not tired.|am|is|are
                         let foundArtifacts = 0;
                         let totalArtifacts = GameConfig.totalQuestions; 
                         let activeArtifactElement = null;
-                        let isMuted = false; // Состояние звука
+                        let isMuted = false; 
                         const BASE_WIDTH = ${baseWidth};
                         const BASE_HEIGHT = ${baseHeight};
                         
-                        // Логика кнопки выключения звука
+                        // Логика кнопки звука
                         muteBtn.addEventListener('click', (e) => {
-                            e.stopPropagation(); // Чтобы клик не срабатывал на элементы под кнопкой
+                            e.stopPropagation(); 
                             isMuted = !isMuted;
                             muteBtn.textContent = isMuted ? '🔇' : '🔊';
-                            
-                            // Применяем свойство muted ко всем звукам
                             Object.values(sounds).forEach(sound => {
                                 if (sound) sound.muted = isMuted;
                             });
                         });
                         
-                        // Функция для масштабирования game-viewport (работает внутри iframe)
                         function scaleGameViewport() {
                             const viewport = document.getElementById('game-viewport');
                             const parentWidth = window.innerWidth;
@@ -803,10 +773,8 @@ I ___ not tired.|am|is|are
                             let scale = 1;
 
                             if (parentRatio > viewportRatio) {
-                                // Родитель шире, масштабируем по высоте
                                 scale = parentHeight / BASE_HEIGHT;
                             } else {
-                                // Родитель выше или то же соотношение, масштабируем по ширине
                                 scale = parentWidth / BASE_WIDTH;
                             }
                             
@@ -816,7 +784,6 @@ I ___ not tired.|am|is|are
                         window.addEventListener('load', () => requestAnimationFrame(scaleGameViewport));
                         window.addEventListener('resize', () => requestAnimationFrame(scaleGameViewport));
                         
-                        // Инициализация элементов UI с данными из конфига
                         startGameBtn.textContent = GameConfig.welcomeMessage;
                         finalTarget.textContent = GameConfig.finalMessage;
                         if (GameConfig.finalLinkUrl) {
@@ -1026,7 +993,6 @@ I ___ not tired.|am|is|are
         }
 
 
-        // ---------- Event Listeners for Editor UI ----------
         Object.values(editorElements).forEach(el => {
             if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) {
                 el.addEventListener('input', updatePreview);
@@ -1049,7 +1015,6 @@ I ___ not tired.|am|is|are
             alert('Код скопирован в буфер обмена!');
         });
 
-        // Инициализация предпросмотра при загрузке
         updatePreview();
     </script>
 </body>
