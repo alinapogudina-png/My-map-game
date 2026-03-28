@@ -3,44 +3,1050 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карта-квест</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Редактор игры "Карта-Квест"</title>
+
+    <!-- Импорт всех используемых шрифтов для редактора и генерируемой игры -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Poppins:wght@400;600&family=Luminari&family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Oswald&family=Playfair+Display&family=Merriweather&family=Raleway&family=Indie+Flower&family=Permanent+Marker&display=swap" rel="stylesheet">
+
+    <style>
+        /* Общие стили для редактора */
+        body {
+            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
+            font-family: 'Poppins', sans-serif; background: #2f273d; color: #e0e0e0;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 20px 10px;
+        }
+        
+        #app {
+            background: linear-gradient(135deg, #4b3e64, #6a5e8c);
+            border-radius: 18px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column; /* Теперь колонкой */
+            gap: 20px;
+            color: #d1c7e0;
+            border: 4px solid #8c7fb3;
+            max-width: 1000px; /* Установил фиксированную ширину для редактора */
+            width: 95%; /* Но адаптивно для меньших экранов */
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+        }
+
+        /* Панель настроек */
+        #settings-panel {
+            background: #3c3252;
+            padding: 18px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        #settings-panel label { font-weight: 600; margin-top: 5px; color: #e8e2f0; display: block; }
+        #settings-panel input[type="text"],
+        #settings-panel input[type="number"],
+        #settings-panel textarea,
+        #settings-panel select,
+        #settings-panel input[type="color"] {
+            width: 100%; /* Убрал calc */
+            padding: 8px;
+            border: 1px solid #716290;
+            border-radius: 8px;
+            background-color: #2b233e;
+            color: #f0f0f0;
+            font-size: 0.9em;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #settings-panel input[type="text"]:focus,
+        #settings-panel input[type="number"]:focus,
+        #settings-panel textarea:focus,
+        #settings-panel select:focus,
+        #settings-panel input[type="color"]:focus {
+            border-color: #a084e0;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(160, 132, 224, 0.5);
+        }
+        #settings-panel textarea { resize: vertical; min-height: 80px; }
+        #settings-panel input[type="color"] { height: 35px; padding: 2px; }
+        #settings-panel input[type="checkbox"] { margin-right: 8px; transform: scale(1.2); }
+
+        .group-label { font-weight: 700; margin-top: 15px; margin-bottom: 5px; color: #a084e0; border-bottom: 1px solid #716290; padding-bottom: 5px; }
+
+        /* Кнопки */
+        .btn {
+            background: linear-gradient(180deg, #716290, #5a4f78);
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px #4a3e62;
+            transition: all 0.1s ease;
+            margin-top: 10px;
+        }
+        .btn:hover { background: linear-gradient(180deg, #81729c, #6b5d8d); box-shadow: 0 6px #5a4f78; transform: translateY(-2px); }
+        .btn:active { background: linear-gradient(180deg, #5a4f78, #716290); box-shadow: 0 2px #4a3e62; transform: translateY(2px); }
+
+        /* Поле вывода кода */
+        #htmlOutput { width: 100%; height: 200px; background-color: #2b233e; color: #00E5FF; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; padding: 10px; border-radius: 8px; margin-top: 10px; resize: vertical; border: 1px solid #716290;}
+
+        /* Предпросмотр */
+        #preview-container {
+            background: #3c3252;
+            border-radius: 14px;
+            padding: 10px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 1px solid #716290;
+            /* Размеры для предпросмотра, чтобы сохранить пропорции 16:9 */
+            width: 100%;
+            padding-bottom: 56.25%; /* 9/16 = 0.5625 */
+            height: 0;
+            overflow: hidden; /* Скрываем все, что выходит за рамки */
+            margin-top: 20px;
+        }
+        #preview-iframe { 
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            background: transparent; 
+            display: block; 
+        }
+
+        /* Копирайт */
+        #copyright { margin-top: 20px; text-align: center; color: #a084e0; font-size: 0.9em; width: 100%; }
+
+        /* Стили для заголовков и доп. текста */
+        h1 {
+            font-family: 'Nunito', sans-serif;
+            font-size: 2.5em;
+            color: #E8E2F0;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(160, 132, 224, 0.7);
+        }
+        .sub-text {
+            text-align: center;
+            font-size: 0.9em;
+            color: #d1c7e0;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            #app {
+                padding: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <button id="start-game-btn">Start the adventure!</button>
-    </div>
+    <div id="app">
+        <h1>Редактор Карты-Квеста</h1>
+        <div class="sub-text">Создайте свою игру, настроив параметры ниже, и получите готовый код для Genially.</div>
 
-    <div id="game-content" class="hidden">
-        <div id="game-container">
-            <div id="artifacts-container"></div>
+        <div id="settings-panel">
+            <h3 class="group-label">Основные настройки</h3>
+            <label for="mapBgUrl">URL фоновой карты:</label>
+            <input type="text" id="mapBgUrl" value="https://i.postimg.cc/3Rkk1S6Q/b219cb5f0eb82c4c39988678151c1c54-d268a249-fd6e-4693-ae94-1f59641e8769.jpg"> 
             
-            <!-- ВОЗВРАЩАЕМ КОНТЕЙНЕР ДЛЯ СЛЕДОВ -->
-            <div id="footprints-container"></div>
+            <!-- Удалена опция "Размер фона", теперь всегда cover -->
+            <input type="hidden" id="bgSize" value="cover">
+            
+            <!-- Опция выбора позиции фона убрана, фон всегда center -->
+            <input type="hidden" id="bgPosition" value="center">
 
-            <div id="collected-artifacts-panel"></div>
-            <div id="score-counter">0 / 20</div>
+            <h3 class="group-label">Артефакты</h3>
+            <label for="artifactImageUrls">URL изображений артефактов (каждая строка - отдельная ссылка):</label>
+            <textarea id="artifactImageUrls">https://i.postimg.cc/TYktLZfk/treasure-chest.png</textarea> <!-- DEFAULT URL CHANGED -->
+            <div class="help-text">Если ссылок несколько, артефакты будут чередоваться. Для панели собираемых отображается каждый собранный.</div>
+            
+            <label for="artifactSize">Размер артефакта (px):</label>
+            <input type="number" id="artifactSize" value="60">
 
-            <a href="https://www.genial.ly" target="_blank" id="final-target" class="hidden">
-                Fantastic!<br>Here is our secret place!
-            </a>
+            <h3 class="group-label">Следы</h3>
+            <label for="footprintImageUrl">URL изображения следа:</label>
+            <input type="text" id="footprintImageUrl" value="https://i.postimg.cc/FsgV3wmt/Untitled-design2.png">
+            
+            <h3 class="group-label">Сообщения</h3>
+            <label for="welcomeMessage">Текст приветственной кнопки:</label>
+            <input type="text" id="welcomeMessage" value="Start the adventure!">
+            <label for="startButtonColor">Цвет фона кнопки старта:</label>
+            <input type="color" id="startButtonColor" value="#8B4513">
+
+            <label for="finalMessage">Текст финального сообщения:</label>
+            <input type="text" id="finalMessage" value="Fantastic! Here is our secret place!">
+            <label for="finalLinkUrl">URL для финальной ссылки:</label>
+            <input type="text" id="finalLinkUrl" value=""> <!-- DEFAULT VALUE CHANGED TO EMPTY -->
+            <div class="help-text">Если поле пустое, финальное сообщение будет некликабельным текстом.</div>
+
+            <h3 class="group-label">Вопросы и ответы</h3>
+            <label for="questionsData">Вопросы (каждая строка: Вопрос|Правильный|Неправильный 1|Неправильный 2|...):</label>
+            <textarea id="questionsData">
+She ___ a doctor.|is|am|are
+They ___ from Spain.|are|is|am
+I ___ a student.|am|is|are
+He ___ my brother.|is|am|are
+We ___ happy.|are|is|am
+You ___ late.|are|is|am
+It ___ a sunny day.|is|am|are
+My cat ___ black.|is|am|are
+His parents ___ at home.|are|is|am
+I ___ not tired.|am|is|are
+            </textarea>
+            <div class="help-text">Вставляйте из Excel: Вопрос | Правильный ответ | Неправильный 1 | Неправильный 2 | Неправильный 3.</div>
+
+            <label for="questionModalBgColor">Цвет фона окна вопроса:</label>
+            <input type="color" id="questionModalBgColor" value="#f3dcb8">
+            <label for="questionModalBorderColor">Цвет рамки окна вопроса:</label>
+            <input type="color" id="questionModalBorderColor" value="#8B4513">
+            <label for="answerButtonBgColor">Цвет фона кнопок ответов:</label>
+            <input type="color" id="answerButtonBgColor" value="#c5a072">
+            <label for="answerButtonHoverColor">Цвет подсветки кнопок ответов (при наведении):</label> <!-- NEW -->
+            <input type="color" id="answerButtonHoverColor" value="#FDFD96"> <!-- NEW, default light yellow -->
+
+            <h3 class="group-label">Позиции на карте</h3>
+            <label for="artifactPositions">Позиции артефактов (каждая строка: top% left%):</label>
+            <textarea id="artifactPositions">
+20% 20%
+40% 75%
+70% 30%
+85% 60%
+50% 10%
+10% 75%
+30% 50%
+60% 15%
+80% 75%
+25% 60%
+            </textarea>
+            <div class="help-text">Укажите top% и left% для каждого артефакта. Количество позиций должно соответствовать количеству вопросов. <br>Старайтесь не размещать артефакты слишком близко к правому краю, чтобы они не перекрывались панелью.</div>
+            
+            <label for="finalTargetTop">Финальная точка (Top %):</label>
+            <input type="number" id="finalTargetTop" value="50">
+            <label for="finalTargetLeft">Финальная точка (Left %):</label>
+            <input type="number" id="finalTargetLeft" value="50">
+
+            <h3 class="group-label">Шрифты и цвета</h3>
+            <label for="questionFont">Шрифт вопросов и ответов:</label>
+            <select id="questionFont">
+                <option value="'Luminari', 'Fantasy', sans-serif">Luminari (Fantasy)</option>
+                <option value="'Nunito', sans-serif">Nunito</option>
+                <option value="'Poppins', sans-serif">Poppins</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="'Montserrat', sans-serif">Montserrat</option>
+                <option value="'Oswald', sans-serif">Oswald</option>
+                <option value="'Playfair+Display', serif">Playfair Display</option>
+                <option value="'Merriweather', serif">Merriweather</option>
+                <option value="'Raleway', sans-serif">Raleway</option>
+                <option value="'Indie Flower', cursive">Indie Flower</option>
+                <option value="'Permanent Marker', cursive">Permanent Marker</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+            </select>
+            <label for="questionTextColor">Цвет текста вопросов:</label>
+            <input type="color" id="questionTextColor" value="#4a2c0c">
+            <label for="answerBtnColor">Цвет текста ответов:</label>
+            <input type="color" id="answerBtnColor" value="#4a2c0c">
+
+            <label style="display:flex; align-items:center;"><input type="checkbox" id="neonQuestionGlowEnabled"> Включить неоновую подсветку рамки вопроса</label>
+            <div id="neonGlowSettings" style="display: none;">
+                <label for="neonQuestionGlowColor">Цвет неоновой подсветки:</label>
+                <input type="color" id="neonQuestionGlowColor" value="#ff00ff">
+            </div>
+
+            <button class="btn" id="generateCodeBtn">Сгенерировать iframe-код</button>
+            <label for="htmlOutput">Сгенерированный iframe-код для встраивания в Genially:</label>
+            <textarea id="htmlOutput" readonly></textarea>
+            <button class="btn" id="copyCodeBtn">Скопировать код</button>
         </div>
 
-        <div id="modal-overlay" class="hidden">
-            <div id="modal">
-                <p id="question-text"></p>
-                <div id="answers-container"></div>
-            </div>
+        <div id="preview-container">
+            <iframe id="preview-iframe"></iframe>
         </div>
     </div>
 
-    <!-- Аудио для звуковых эффектов -->
-    <audio id="correct-sound" src="https://files.catbox.moe/6n1mv9.mp3" preload="auto"></audio>
-    <audio id="chest-open-sound" src="https://files.catbox.moe/6wo57y.mp3" preload="auto"></audio>
-    <audio id="final-target-sound" src="https://files.catbox.moe/4blw0b.mp3" preload="auto"></audio>
-    <audio id="wrong-answer-sound" src="https://files.catbox.moe/6e8vp7.mp3" preload="auto"></audio>
+    <div id="copyright">© ELT_workshop</div>
 
-    <script src="script.js"></script>
+    <script>
+        const editorElements = {
+            mapBgUrl: document.getElementById('mapBgUrl'),
+            bgSize: document.getElementById('bgSize'), 
+            artifactImageUrls: document.getElementById('artifactImageUrls'), 
+            artifactSize: document.getElementById('artifactSize'),
+            footprintImageUrl: document.getElementById('footprintImageUrl'),
+            welcomeMessage: document.getElementById('welcomeMessage'),
+            startButtonColor: document.getElementById('startButtonColor'),
+            finalMessage: document.getElementById('finalMessage'),
+            finalLinkUrl: document.getElementById('finalLinkUrl'),
+            questionsData: document.getElementById('questionsData'),
+            questionModalBgColor: document.getElementById('questionModalBgColor'),
+            questionModalBorderColor: document.getElementById('questionModalBorderColor'),
+            answerButtonBgColor: document.getElementById('answerButtonBgColor'),
+            answerButtonHoverColor: document.getElementById('answerButtonHoverColor'), // NEW
+            artifactPositions: document.getElementById('artifactPositions'),
+            finalTargetTop: document.getElementById('finalTargetTop'),
+            finalTargetLeft: document.getElementById('finalTargetLeft'),
+            questionFont: document.getElementById('questionFont'),
+            questionTextColor: document.getElementById('questionTextColor'),
+            answerBtnColor: document.getElementById('answerBtnColor'),
+            neonQuestionGlowEnabled: document.getElementById('neonQuestionGlowEnabled'),
+            neonQuestionGlowColor: document.getElementById('neonQuestionGlowColor'),
+            neonGlowSettings: document.getElementById('neonGlowSettings'),
+            generateCodeBtn: document.getElementById('generateCodeBtn'),
+            htmlOutput: document.getElementById('htmlOutput'),
+            copyCodeBtn: document.getElementById('copyCodeBtn'),
+            previewContainer: document.getElementById('preview-container'),
+            previewIframe: document.getElementById('preview-iframe') 
+        };
+
+        // Переключение видимости настроек неоновой подсветки
+        editorElements.neonQuestionGlowEnabled.addEventListener('change', () => {
+            editorElements.neonGlowSettings.style.display = editorElements.neonQuestionGlowEnabled.checked ? 'block' : 'none';
+            updatePreview();
+        });
+
+
+        function parseQuestions(text) {
+            const lines = text.trim().split('\n').filter(Boolean);
+            return lines.map(line => {
+                const parts = line.split('|').map(p => p.trim());
+                if (parts.length < 2) {
+                    console.warn(`Вопрос некорректно отформатирован: "${line}". Пропускаем.`);
+                    return null; 
+                }
+                const question = parts[0];
+                const correctAnswer = parts[1];
+                const incorrectAnswers = parts.slice(2);
+                const answers = [correctAnswer, ...incorrectAnswers].sort(() => Math.random() - 0.5);
+                const correct = answers.indexOf(correctAnswer);
+                return { question, answers, correct };
+            }).filter(Boolean);
+        }
+
+        function parseArtifactPositions(text) {
+            const lines = text.trim().split('\n').filter(Boolean);
+            return lines.map(line => {
+                const parts = line.split(' ').map(p => p.trim());
+                if (parts.length !== 2) {
+                    console.warn(`Позиция артефакта некорректно отформатирована: "${line}". Ожидаются "top% left%". Пропускаем.`);
+                    return null;
+                }
+                // Убедимся, что проценты корректно распознаются
+                if (!parts[0].endsWith('%') || !parts[1].endsWith('%')) {
+                    console.warn(`Некорректный формат позиции: "${line}". Ожидаются значения в процентах (например, "50% 50%"). Пропускаем.`);
+                    return null;
+                }
+                return { top: parts[0], left: parts[1] };
+            }).filter(Boolean);
+        }
+        
+        // Новая функция для парсинга нескольких URL изображений артефактов
+        function parseArtifactImageUrls(text) {
+            return text.trim().split('\n').map(url => url.trim()).filter(Boolean);
+        }
+
+        // ---------- helpers (из примера "Овечки") ----------
+        // Используется для безопасной вставки всего HTML-кода игры в атрибут srcdoc
+        function escapeForSrcdoc(html){
+            return String(html)
+              .replaceAll("&","&amp;")
+              .replaceAll('"',"&quot;")
+              .replaceAll("<","&lt;")
+              .replaceAll(">","&gt;");
+        }
+
+        // Используется для безопасной вставки JS-объекта GameConfig в <script> тег
+        function safeJson(obj){
+            return JSON.stringify(obj)
+              .replaceAll("<","\\u003c") // Экранируем <
+              .replaceAll(">","\\u003e") // Экранируем >
+              .replaceAll("&","\\u0026"); // Экранируем &
+        }
+        // ---------- конец helpers ----------
+
+        function updatePreview() {
+            // Генерируем полный HTML-контент игры, который пойдет в srcdoc
+            const innerHtmlContent = generateGameHtml();
+            // Устанавливаем srcdoc для iframe предпросмотра
+            editorElements.previewIframe.srcdoc = innerHtmlContent;
+        }
+
+
+        function generateGameHtml() {
+            const questionsArray = parseQuestions(editorElements.questionsData.value);
+            const artifactPositionsArray = parseArtifactPositions(editorElements.artifactPositions.value);
+            const totalQuestions = questionsArray.length;
+
+            const selectedFont = editorElements.questionFont.value;
+            const bgSizeValue = "cover"; 
+            
+            const fontImportLink = `<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Poppins:wght@400;600&family=Luminari&family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Oswald&family=Playfair+Display&family=Merriweather&family=Raleway&family=Indie+Flower&family=Permanent+Marker&display=swap" rel="stylesheet">`;
+            
+            const neonGlowStyleValue = editorElements.neonQuestionGlowEnabled.checked ? 
+                                  `0 0 5px ${editorElements.neonQuestionGlowColor.value}, 0 0 10px ${editorElements.neonQuestionGlowColor.value}, 0 0 15px ${editorElements.neonQuestionGlowColor.value}` : 
+                                  'none';
+
+            const baseWidth = 1280;
+            const baseHeight = 720;
+
+            // --- Сформируем GameConfig для передачи в игру (внутри srcdoc) ---
+            const gameConfig = {
+                mapBgUrl: editorElements.mapBgUrl.value,
+                bgSize: bgSizeValue, 
+                artifactImageUrls: parseArtifactImageUrls(editorElements.artifactImageUrls.value), 
+                artifactSizePx: parseInt(editorElements.artifactSize.value) || 60,
+                footprintImageUrl: editorElements.footprintImageUrl.value,
+                welcomeMessage: editorElements.welcomeMessage.value,
+                startButtonColor: editorElements.startButtonColor.value, 
+                finalMessage: editorElements.finalMessage.value,
+                finalLinkUrl: editorElements.finalLinkUrl.value.trim(), 
+                questions: questionsArray,
+                questionModalBgColor: editorElements.questionModalBgColor.value, 
+                questionModalBorderColor: editorElements.questionModalBorderColor.value,
+                answerButtonBgColor: editorElements.answerButtonBgColor.value,
+                answerButtonHoverColor: editorElements.answerButtonHoverColor.value, // NEW
+                artifactPositions: artifactPositionsArray,
+                finalTargetTop: editorElements.finalTargetTop.value + '%', 
+                finalTargetLeft: editorElements.finalTargetLeft.value + '%', 
+                questionFont: selectedFont,
+                questionTextColor: editorElements.questionTextColor.value,
+                answerBtnColor: editorElements.answerBtnColor.value,
+                neonGlowStyle: neonGlowStyleValue, 
+                totalQuestions: totalQuestions 
+            };
+
+            // HTML-контент, который будет в атрибуте srcdoc
+            let innerHtmlContent = `
+            <!DOCTYPE html>
+            <html lang="ru">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Карта-квест</title>
+                ${fontImportLink}
+                <style>
+                    /* Объявляем CSS-переменные в :root, их значения будут установлены JavaScript */
+                    :root {
+                        --map-bg-url: url('');
+                        --bg-size: cover;
+                        --artifact-size-px: 60px;
+                        --footprint-img-url: url('');
+                        --question-text-color: #4a2c0c;
+                        --answer-btn-color: #4a2c0c;
+                        --final-target-top: 50%;
+                        --final-target-left: 50%;
+                        --modal-neon-glow-shadow: none;
+                        --game-font: 'Poppins', sans-serif; 
+                        --start-button-color: #8B4513; 
+                        --question-modal-bg-color: #f3dcb8; 
+                        --question-modal-border-color: #8B4513; 
+                        --answer-button-bg-color: #c5a072; 
+                        --answer-button-hover-color: #FDFD96; /* NEW */
+                    }
+
+                    html, body { 
+                        margin: 0; 
+                        padding: 0; 
+                        height: 100%; 
+                        width: 100%; 
+                        box-sizing: border-box; 
+                        overflow: hidden; 
+                        font-family: var(--game-font); 
+                        /* Фон игры теперь на body, чтобы заполнить весь iframe */
+                        background: var(--map-bg-url) no-repeat center center; 
+                        background-size: var(--bg-size); 
+                        display: flex; 
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    
+                    #game-viewport {
+                        position: relative;
+                        width: ${baseWidth}px; 
+                        height: ${baseHeight}px;
+                        background-color: transparent; 
+                        overflow: hidden; 
+                        transform-origin: center center; 
+                        /* transform: scale() будет установлен JavaScript */
+                    }
+
+                    #start-screen, #game-content {
+                        position: absolute; 
+                        width: 100%; 
+                        height: 100%; 
+                        top: 0;
+                        left: 0;
+                        background: none; 
+                    }
+
+                    #start-screen { 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                    }
+                    #start-game-btn { 
+                        padding: 20px 40px; 
+                        font-size: 32px; 
+                        font-family: inherit; 
+                        color: white; 
+                        background-color: var(--start-button-color); 
+                        border: 3px solid #f3dcb8; 
+                        border-radius: 15px; 
+                        cursor: pointer; 
+                        box-shadow: 0 10px 20px rgba(0,0,0,0.4); 
+                        transition: transform 0.2s; 
+                    }
+                    #start-game-btn:hover { transform: scale(1.05); }
+                    
+                    #game-container { 
+                        position: relative; 
+                        width: 100%; 
+                        height: 100%; 
+                    }
+
+                    @keyframes sway { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(4deg) scale(1); } 100% { transform: rotate(0deg) scale(1); } }
+                    .artifact { 
+                        position: absolute; 
+                        width: var(--artifact-size-px); 
+                        height: var(--artifact-size-px); 
+                        background-image: url(''); 
+                        background-position: center center; 
+                        background-repeat: no-repeat; 
+                        background-size: contain; 
+                        cursor: pointer; 
+                        filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4)); 
+                        animation: sway 2s ease-in-out infinite alternate; 
+                        z-index: 10; 
+                        transition: top 1s ease-in-out, left 1s ease-in-out, transform 1s ease-in-out; 
+                    }
+                    .artifact:hover { transform: scale(1.25); filter: brightness(1.1) drop-shadow(0 8px 15px rgba(0,0,0,0.5)); animation-play-state: paused; }
+
+                    #score-counter { 
+                        position: absolute; 
+                        top: 20px; 
+                        right: 120px; 
+                        padding: 10px 20px; 
+                        background-color: rgba(50, 30, 10, 0.7); 
+                        color: #f3dcb8; 
+                        font-size: 24px; 
+                        border-radius: 10px; 
+                        border: 2px solid #f3dcb8; 
+                        z-index: 100; 
+                    }
+
+                    #collected-artifacts-panel {
+                        position: absolute; 
+                        right: 15px; 
+                        top: 50%; 
+                        transform: translateY(-50%);
+                        width: 85px; 
+                        height: 684px; /* 95% от 720px */
+                        background-color: rgba(0, 0, 0, 0.4);
+                        border-radius: 15px; 
+                        padding: 10px 5px; 
+                        box-sizing: border-box; 
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-content: flex-start;
+                        justify-content: center;
+                        gap: 4px; 
+                        z-index: 100; 
+                    }
+                    .collected-artifact { 
+                        width: 35px; 
+                        height: 35px; 
+                        background-image: url(''); 
+                        background-position: center center; 
+                        background-repeat: no-repeat; 
+                        background-size: contain; 
+                        flex-shrink: 0; 
+                    }
+
+                    #footprints-container {
+                        position: absolute; 
+                        top: 20px; 
+                        left: 50%; 
+                        transform: translateX(-50%);
+                        display: flex; 
+                        flex-wrap: nowrap; 
+                        justify-content: center; 
+                        gap: 10px; 
+                        padding: 10px; 
+                        background-color: rgba(0, 0, 0, 0.4); 
+                        border-radius: 10px; 
+                        max-width: 500px; 
+                        overflow-x: hidden; 
+                        z-index: 100; 
+                    }
+                    .footprint {
+                        width: 35px; 
+                        height: 35px; 
+                        background: var(--footprint-img-url) no-repeat center center;
+                        background-size: contain;
+                        transition: all 1.5s cubic-bezier(0.42, 0, 0.58, 1);
+                    }
+                    .final-path-footprint {
+                        position: absolute; 
+                        width: 60px; 
+                        height: 60px; 
+                        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7)); 
+                    }
+
+                    .hidden { display: none !important; }
+
+                    #final-target { 
+                        position: absolute; 
+                        top: var(--final-target-top); 
+                        left: var(--final-target-left); 
+                        transform: translate(-50%, -50%); 
+                        padding: 25px; 
+                        background-color: gold; 
+                        color: #4a2c0c; 
+                        font-size: 19.2px; 
+                        text-decoration: none; 
+                        border-radius: 15px; 
+                        border: 3px solid #fff; 
+                        box-shadow: 0 0 20px 10px gold, 0 0 50px 20px rgba(255, 215, 0, 0.5); 
+                        animation: pulse 2s infinite; 
+                        z-index: 50; 
+                        text-align: center; 
+                        white-space: nowrap; 
+                    }
+
+                    #modal-overlay { 
+                        position: absolute; 
+                        top: 0; 
+                        left: 0; 
+                        width: 100%; 
+                        height: 100%; 
+                        background-color: rgba(0, 0, 0, 0.7); 
+                        display: flex; 
+                        justify-content: center;
+                        align-items: center; 
+                        z-index: 1000; 
+                    }
+                    #modal { 
+                        background-color: var(--question-modal-bg-color); 
+                        background-image: url('https://www.transparenttextures.com/patterns/old-paper.png'); 
+                        padding: 30px; 
+                        border-radius: 15px; 
+                        border: 5px solid var(--question-modal-border-color); 
+                        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), var(--modal-neon-glow-shadow); 
+                        text-align: center; 
+                        width: 450px; 
+                        max-width: 500px; 
+                    }
+                    #question-text { font-size: 24px; color: var(--question-text-color); margin-bottom: 20px; font-family: var(--game-font); }
+                    #answers-container { display: flex; flex-direction: column; gap: 10px; }
+                    .answer-btn { 
+                        padding: 15px; 
+                        border: 2px solid var(--question-modal-border-color); 
+                        background-color: var(--answer-button-bg-color); 
+                        color: var(--answer-btn-color); 
+                        font-size: 19.2px; 
+                        font-family: var(--game-font); 
+                        border-radius: 10px; 
+                        cursor: pointer; 
+                        transition: background-color 0.2s; 
+                    }
+                    .answer-btn:hover { background-color: var(--answer-button-hover-color); } <!-- NEW HOVER COLOR -->
+                    .shake { animation: shake 0.5s; }
+                    @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); } 20%, 40%, 60%, 80% { transform: translateX(10px); } }
+                    @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(0.95); } 70% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(0.95); } }
+                    
+                    /* Стили для кнопки звука */
+                    #mute-btn {
+                        position: absolute;
+                        bottom: 20px;
+                        right: 120px; /* Сдвинуто чуть левее панели артефактов */
+                        width: 50px;
+                        height: 50px;
+                        font-size: 24px;
+                        background-color: rgba(50, 30, 10, 0.7);
+                        color: white;
+                        border: 2px solid #f3dcb8;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        z-index: 2000;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        transition: transform 0.2s, background-color 0.2s;
+                        padding: 0;
+                        line-height: 1;
+                        box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+                    }
+                    #mute-btn:hover {
+                        transform: scale(1.1);
+                        background-color: rgba(50, 30, 10, 0.9);
+                    }
+                </style>
+            </head>
+            <body>
+                <div id="game-viewport">
+                    <div id="start-screen">
+                        <button id="start-game-btn"></button>
+                    </div>
+
+                    <div id="game-content" class="hidden">
+                        <div id="game-container">
+                            <div id="artifacts-container"></div>
+                            
+                            <div id="footprints-container"></div>
+
+                            <div id="collected-artifacts-panel"></div>
+                            <div id="score-counter"></div>
+
+                            <a target="_blank" id="final-target" class="hidden"></a>
+                        </div>
+
+                        <div id="modal-overlay" class="hidden">
+                            <div id="modal">
+                                <p id="question-text"></p>
+                                <div id="answers-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Кнопка выключения звука -->
+                    <button id="mute-btn">🔊</button>
+                </div>
+
+                <audio id="correct-sound" src="https://files.catbox.moe/6n1mv9.mp3" preload="auto"></audio>
+                <audio id="chest-open-sound" src="https://files.catbox.moe/6wo57y.mp3" preload="auto"></audio>
+                <audio id="final-target-sound" src="https://files.catbox.moe/4blw0b.mp3" preload="auto"></audio>
+                <audio id="wrong-answer-sound" src="https://files.catbox.moe/6e8vp7.mp3" preload="auto"></audio>
+
+                <script>
+                    const GameConfig = ${safeJson(gameConfig)};
+
+                    // Динамическая установка CSS-переменных из GameConfig
+                    document.documentElement.style.setProperty('--map-bg-url', \`url(\${GameConfig.mapBgUrl})\`);
+                    document.documentElement.style.setProperty('--bg-size', GameConfig.bgSize);
+                    document.documentElement.style.setProperty('--artifact-size-px', \`\${GameConfig.artifactSizePx}px\`);
+                    document.documentElement.style.setProperty('--footprint-img-url', \`url(\${GameConfig.footprintImageUrl})\`);
+                    document.documentElement.style.setProperty('--question-text-color', GameConfig.questionTextColor);
+                    document.documentElement.style.setProperty('--answer-btn-color', GameConfig.answerBtnColor);
+                    document.documentElement.style.setProperty('--final-target-top', GameConfig.finalTargetTop);
+                    document.documentElement.style.setProperty('--final-target-left', GameConfig.finalTargetLeft);
+                    document.documentElement.style.setProperty('--modal-neon-glow-shadow', GameConfig.neonGlowStyle);
+                    document.documentElement.style.setProperty('--game-font', GameConfig.questionFont);
+                    document.documentElement.style.setProperty('--start-button-color', GameConfig.startButtonColor); 
+                    document.documentElement.style.setProperty('--question-modal-bg-color', GameConfig.questionModalBgColor); 
+                    document.documentElement.style.setProperty('--question-modal-border-color', GameConfig.questionModalBorderColor); 
+                    document.documentElement.style.setProperty('--answer-button-bg-color', GameConfig.answerButtonBgColor); 
+                    document.documentElement.style.setProperty('--answer-button-hover-color', GameConfig.answerButtonHoverColor); // NEW
+
+
+                    (function() {
+                        const questions = GameConfig.questions;
+                        const artifactPositions = GameConfig.artifactPositions;
+                        const artifactImageUrls = GameConfig.artifactImageUrls; 
+
+                        const footprintsContainer = document.getElementById('footprints-container');
+                        const collectedArtifactsPanel = document.getElementById('collected-artifacts-panel');
+                        const artifactsContainer = document.getElementById('artifacts-container');
+                        const startScreen = document.getElementById('start-screen');
+                        const startGameBtn = document.getElementById('start-game-btn');
+                        const gameContent = document.getElementById('game-content');
+                        const scoreCounter = document.getElementById('score-counter');
+                        const modalOverlay = document.getElementById('modal-overlay');
+                        const modal = document.getElementById('modal');
+                        const questionText = document.getElementById('question-text');
+                        const answersContainer = document.getElementById('answers-container');
+                        const finalTarget = document.getElementById('final-target');
+                        const muteBtn = document.getElementById('mute-btn'); // Кнопка звука
+                        const sounds = { 
+                            correct: document.getElementById('correct-sound'), 
+                            open: document.getElementById('chest-open-sound'), 
+                            final: document.getElementById('final-target-sound'), 
+                            wrong: document.getElementById('wrong-answer-sound') 
+                        };
+
+                        let foundArtifacts = 0;
+                        let totalArtifacts = GameConfig.totalQuestions; 
+                        let activeArtifactElement = null;
+                        let isMuted = false; // Состояние звука
+                        const BASE_WIDTH = ${baseWidth};
+                        const BASE_HEIGHT = ${baseHeight};
+                        
+                        // Логика кнопки выключения звука
+                        muteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Чтобы клик не срабатывал на элементы под кнопкой
+                            isMuted = !isMuted;
+                            muteBtn.textContent = isMuted ? '🔇' : '🔊';
+                            
+                            // Применяем свойство muted ко всем звукам
+                            Object.values(sounds).forEach(sound => {
+                                if (sound) sound.muted = isMuted;
+                            });
+                        });
+                        
+                        // Функция для масштабирования game-viewport (работает внутри iframe)
+                        function scaleGameViewport() {
+                            const viewport = document.getElementById('game-viewport');
+                            const parentWidth = window.innerWidth;
+                            const parentHeight = window.innerHeight;
+
+                            const viewportRatio = BASE_WIDTH / BASE_HEIGHT;
+                            const parentRatio = parentWidth / parentHeight;
+
+                            let scale = 1;
+
+                            if (parentRatio > viewportRatio) {
+                                // Родитель шире, масштабируем по высоте
+                                scale = parentHeight / BASE_HEIGHT;
+                            } else {
+                                // Родитель выше или то же соотношение, масштабируем по ширине
+                                scale = parentWidth / BASE_WIDTH;
+                            }
+                            
+                            viewport.style.transform = \`scale(\${scale})\`;
+                        }
+
+                        window.addEventListener('load', () => requestAnimationFrame(scaleGameViewport));
+                        window.addEventListener('resize', () => requestAnimationFrame(scaleGameViewport));
+                        
+                        // Инициализация элементов UI с данными из конфига
+                        startGameBtn.textContent = GameConfig.welcomeMessage;
+                        finalTarget.textContent = GameConfig.finalMessage;
+                        if (GameConfig.finalLinkUrl) {
+                            finalTarget.href = GameConfig.finalLinkUrl;
+                            finalTarget.target = '_blank';
+                            finalTarget.style.cursor = 'pointer';
+                        } else {
+                            finalTarget.removeAttribute('href');
+                            finalTarget.removeAttribute('target');
+                            finalTarget.style.cursor = 'default';
+                            finalTarget.addEventListener('click', (e) => e.preventDefault()); 
+                        }
+                        scoreCounter.textContent = \`\${foundArtifacts} / \${totalArtifacts}\`; 
+
+                        function checkAnswer(isCorrect) {
+                            if (isCorrect) {
+                                playSound(sounds.correct);
+                                foundArtifacts++;
+                                scoreCounter.textContent = \`\${foundArtifacts} / \${totalArtifacts}\`;
+                                collectArtifactAnimation();
+                                addFootprint();
+                                closeModal();
+                                if (foundArtifacts === totalArtifacts) {
+                                    setTimeout(endGame, 1200);
+                                }
+                            } else {
+                                playSound(sounds.wrong);
+                                modal.classList.add('shake');
+                                setTimeout(() => modal.classList.remove('shake'), 500);
+                            }
+                        }
+
+                        function addFootprint() {
+                            const footprint = document.createElement('div');
+                            footprint.className = 'footprint';
+                            footprintsContainer.appendChild(footprint);
+                        }
+                        
+                        function endGame() {
+                            const footprints = Array.from(footprintsContainer.children);
+                            footprintsContainer.style.background = 'none'; 
+                            const finalTargetX_percent = parseFloat(GameConfig.finalTargetLeft);
+                            const finalTargetY_percent = parseFloat(GameConfig.finalTargetTop);
+                            
+                            const pathPoints = generatePathPointsFromCorner(footprints.length, finalTargetX_percent, finalTargetY_percent);
+                            
+                            footprints.forEach((footprint, index) => {
+                                setTimeout(() => {
+                                    const gameContainer = document.getElementById('game-container');
+                                    
+                                    const footprintRect = footprint.getBoundingClientRect();
+                                    const gameContainerRect = gameContainer.getBoundingClientRect(); 
+                                    
+                                    const currentFootprintTopPercent = ((footprintRect.top - gameContainerRect.top) / gameContainerRect.height) * 100;
+                                    const currentFootprintLeftPercent = ((footprintRect.left - gameContainerRect.left) / gameContainerRect.width) * 100;
+
+                                    footprint.style.position = 'absolute'; 
+                                    footprint.style.transition = 'none'; 
+                                    footprint.style.top = \`\${currentFootprintTopPercent}%\`;
+                                    footprint.style.left = \`\${currentFootprintLeftPercent}%\`;
+
+                                    gameContainer.appendChild(footprint); 
+                                    footprint.classList.add('final-path-footprint');
+                                    
+                                    footprint.style.transition = 'all 1.5s cubic-bezier(0.42, 0, 0.58, 1)'; 
+
+                                    setTimeout(() => {
+                                        const point = pathPoints[index];
+                                        footprint.style.top = point.top; 
+                                        footprint.style.left = point.left;
+                                        
+                                        const footprintX = parseFloat(point.left);
+                                        const footprintY = parseFloat(point.top);
+                                        const deltaX = finalTargetX_percent - footprintX;
+                                        const deltaY = finalTargetY_percent - footprintY;
+                                        const angleRad = Math.atan2(deltaY, deltaX);
+                                        const angleDeg = angleRad * (180 / Math.PI);
+                                        footprint.style.transform = \`rotate(\${angleDeg + 90}deg)\`;
+                                    }, 50);
+                                }, index * 200);
+                            });
+                            setTimeout(() => {
+                                finalTarget.classList.remove('hidden');
+                                playSound(sounds.final);
+                            }, footprints.length * 200 + 1500);
+                        }
+
+                        function generatePathPointsFromCorner(numFootprints, finalX, finalY) {
+                            const points = [];
+                            const startPathX = 0; 
+                            const startPathY = 100; 
+
+                            const stepX = (finalX - startPathX) / Math.max(1, (numFootprints - 1));
+                            const stepY = (finalY - startPathY) / Math.max(1, (numFootprints - 1));
+
+                            for(let i = 0; i < numFootprints; i++) {
+                                const x = startPathX + stepX * i;
+                                const y = startPathY + stepY * i;
+                                points.push({ top: \`\${y}%\`, left: \`\${x}%\` });
+                            }
+                            return points;
+                        }
+                        
+                        function collectArtifactAnimation() {
+                            const artifactToAnimate = activeArtifactElement;
+
+                            artifactToAnimate.removeEventListener('click', handleArtifactClick);
+                            artifactToAnimate.style.pointerEvents = 'none';
+                            
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'collected-artifact';
+                            placeholder.style.backgroundImage = artifactToAnimate.style.backgroundImage;
+                            collectedArtifactsPanel.appendChild(placeholder);
+                            
+                            const gameViewport = document.getElementById('game-viewport');
+                            const gameViewportRect = gameViewport.getBoundingClientRect();
+                            const placeholderRect = placeholder.getBoundingClientRect();
+                            const startRect = artifactToAnimate.getBoundingClientRect();
+                            
+                            const targetTopPercent = ((placeholderRect.top - gameViewportRect.top) / gameViewportRect.height) * 100;
+                            const targetLeftPercent = ((placeholderRect.left - gameViewportRect.left) / gameViewportRect.width) * 100;
+                            
+                            const startTopPercent = ((startRect.top - gameViewportRect.top) / gameViewportRect.height) * 100;
+                            const startLeftPercent = ((startRect.left - gameViewportRect.left) / gameViewportRect.width) * 100;
+
+
+                            artifactToAnimate.style.position = 'absolute'; 
+                            artifactToAnimate.style.top = \`\${targetTopPercent}%\`; 
+                            artifactToAnimate.style.left = \`\${targetLeftPercent}%\`;
+                            artifactToAnimate.style.transition = 'all 1.1s ease-in-out'; 
+                            artifactToAnimate.style.transform = 'scale(0.5)'; 
+                            artifactToAnimate.style.zIndex = '2000'; 
+
+                            setTimeout(() => {
+                                artifactToAnimate.remove();
+                            }, 1100);
+                        }
+                        
+                        function playSound(sound) { 
+                            if (sound && typeof sound.play === 'function') {
+                                sound.currentTime = 0; 
+                                sound.play().catch(e => console.warn("Could not play sound:", e));
+                            }
+                        }
+                        
+                        function startGame() { 
+                            Object.values(sounds).forEach(sound => {
+                                if (sound && typeof sound.play === 'function') {
+                                    sound.play().then(() => { sound.pause(); sound.currentTime = 0; }).catch(() => {});
+                                }
+                            }); 
+
+                            startScreen.classList.add('hidden'); 
+                            gameContent.classList.remove('hidden'); 
+                            initGame(); 
+                        }
+
+                        function initGame() { 
+                            foundArtifacts = 0; 
+                            collectedArtifactsPanel.innerHTML = ''; 
+                            artifactsContainer.innerHTML = ''; 
+                            footprintsContainer.innerHTML = ''; 
+                            finalTarget.classList.add('hidden'); 
+
+                            scoreCounter.textContent = \`\${foundArtifacts} / \${totalArtifacts}\`; 
+                            questions.forEach((qData, index) => { 
+                                const artifact = document.createElement('div'); 
+                                artifact.className = 'artifact'; 
+                                artifact.style.top = artifactPositions[index].top; 
+                                artifact.style.left = artifactPositions[index].left; 
+                                artifact.dataset.questionIndex = index; 
+                                
+                                const imageUrls = GameConfig.artifactImageUrls;
+                                const artifactImageUrl = imageUrls.length > 0 
+                                                         ? imageUrls[index % imageUrls.length] 
+                                                         : 'https://i.postimg.cc/TYktLZfk/treasure-chest.png'; 
+                                artifact.style.backgroundImage = \`url(\${artifactImageUrl})\`; 
+                                
+                                artifact.addEventListener('click', handleArtifactClick); 
+                                artifactsContainer.appendChild(artifact); 
+                            }); 
+                        }
+                        function handleArtifactClick(event) { playSound(sounds.open); activeArtifactElement = event.target; openModal(activeArtifactElement.dataset.questionIndex); }
+                        function openModal(questionIndex) { 
+                            const qd = questions[questionIndex]; 
+                            questionText.textContent = qd.question; 
+                            answersContainer.innerHTML = ''; 
+                            qd.answers.forEach((ans, i) => { 
+                                const btn = document.createElement('button'); 
+                                btn.className = 'answer-btn'; 
+                                btn.textContent = ans; 
+                                btn.onclick = () => checkAnswer(i === qd.correct); 
+                                answersContainer.appendChild(btn); 
+                            }); 
+                            modalOverlay.classList.remove('hidden'); 
+                        }
+                        function closeModal() { modalOverlay.classList.add('hidden'); }
+                        
+                        startGameBtn.addEventListener('click', startGame);
+
+                    })(); 
+                <\/script>
+            </body>
+            </html>
+            `;
+            return innerHtmlContent;
+        }
+
+
+        // ---------- Event Listeners for Editor UI ----------
+        Object.values(editorElements).forEach(el => {
+            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) {
+                el.addEventListener('input', updatePreview);
+                if (el.type === 'checkbox' || el.tagName === 'SELECT') {
+                     el.addEventListener('change', updatePreview);
+                }
+            }
+        });
+        
+        editorElements.generateCodeBtn.addEventListener('click', () => {
+            const innerHtmlContent = generateGameHtml();
+            const escapedContent = escapeForSrcdoc(innerHtmlContent); 
+            const iframeTag = `<iframe srcdoc="${escapedContent}" style="border:none;width:100%;height:100%;background:transparent;" allowtransparency="true" allow="autoplay"></iframe>`;
+            editorElements.htmlOutput.value = iframeTag;
+        });
+
+        editorElements.copyCodeBtn.addEventListener('click', () => {
+            editorElements.htmlOutput.select();
+            document.execCommand('copy');
+            alert('Код скопирован в буфер обмена!');
+        });
+
+        // Инициализация предпросмотра при загрузке
+        updatePreview();
+    </script>
 </body>
 </html>
